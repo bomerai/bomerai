@@ -1,0 +1,15 @@
+services:
+  database:
+    image: pgvector/pgvector:pg13
+    volumes:
+      - "pgdata:/var/lib/postgresql/data"
+    ports:
+      - "5432:5432"
+    hostname: database.local
+    environment:
+      POSTGRES_DB: django
+      POSTGRES_USER: service_app_user
+      POSTGRES_HOST_AUTH_METHOD: trust
+
+volumes:
+  pgdata:

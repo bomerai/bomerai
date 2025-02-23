@@ -1,0 +1,109 @@
+[tool.poetry]
+name = "forge-application-service"
+version = "0.1.0"
+description = ""
+authors = ["Peter <pedro357bm@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+ruff = "^0.9.6"
+django = "^5.1.6"
+djangorestframework = "^3.15.2"
+requests = "^2.32.3"
+structlog = "^25.1.0"
+pgvector = "^0.3.6"
+pillow = "^11.1.0"
+transformers = "^4.48.3"
+psycopg2-binary = "^2.9.10"
+langchain = "^0.3.18"
+langchain-openai = "^0.3.6"
+pydantic = "^2.10.6"
+django-structlog = {extras=["celery"], version="^8.0.0"}
+pytest = "^8.3.4"
+langfuse = "^2.59.3"
+cryptography = "^44.0.1"
+pytest-coverage = "^0.0"
+pytest-django = "^4.10.0"
+pytest-dotenv = "^0.5.2"
+pytest-mock = "^3.14.0"
+pytest-sugar = "^1.0.0"
+pytest-asyncio = "^0.25.3"
+pytest-env = "^1.1.5"
+pytest-unordered = "^0.6.1"
+urlpath = "^1.2.0"
+
+[tool.poetry.group.dev.dependencies]
+ipython = "^8.32.0"
+
+[tool.ruff]
+ignore = ["F401"]
+target-version = "py311"
+line-length = 120
+exclude = [
+	".mypy_cache",
+	".pytest_cache",
+	"manage.py",
+	"migrations",
+	".bzr",
+	".direnv",
+	".eggs",
+	".git",
+	".git-rewrite",
+	".hg",
+	".mypy_cache",
+	".nox",
+	".pants.d",
+	".pytype",
+	".ruff_cache",
+	".svn",
+	".tox",
+	".venv",
+	"__pypackages__",
+	"_build",
+	"buck-out",
+	"build",
+	"dist",
+	"node_modules",
+	"venv",
+]
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+addopts = [
+	"--tb=long",
+	"--cov",
+	"--cov-report=term-missing",
+	"--verbosity=2",
+
+]
+minversion = "6.0"
+DJANGO_SETTINGS_MODULE = "core.settings"
+testpaths = ["."]
+required_plugins = [
+    "pytest-dotenv",
+	"pytest-mock",
+	# "pytest-mypy",
+]
+
+[tool.coverage.run]
+branch = true
+omit = [
+	# Init files SHOULD contain only imports,
+	"**/__init__.py",
+	# Testing files are not code to be tested
+    "conftest.py",
+	"**/*_test.py",
+	# Log configuration does not apply in a unit test environment
+	"core/logging/**/*.py",
+	# Non-functional configuration code.
+	"core/constants/**/*.py",
+	# "core/gunicorn/**/*.py",
+	# Django setup files
+	"core/urls.py",
+	"core/wsgi.py",
+]
