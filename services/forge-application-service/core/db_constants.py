@@ -18,6 +18,8 @@ class _Constants(BaseModel):
     LANGFUSE_SECRET_KEY: str | None = None
     FORGE_FRONTEND_URL: str = "https://localhost:3000"
     SEND_LANGFUSE_TRACES: bool = True
+    AUTODESK_CLIENT_ID: str | None = None
+    AUTODESK_CLIENT_SECRET: str | None = None
 
 
 class _AppConstants:
@@ -25,10 +27,10 @@ class _AppConstants:
 
     _values: _Constants | None = None
 
-    async def values(self) -> _Constants:
+    def values(self) -> _Constants:
         """Get the app constants from the database."""
         if self._values is None:
-            await self.set_values()
+            self.set_values()
 
         if not self._values:
             msg = "DB constants have not been set."
@@ -36,13 +38,10 @@ class _AppConstants:
 
         return self._values
 
-    async def set_values(self) -> None:
+    def set_values(self) -> None:
         """Set all configurable variables from the database."""
         self._values = _Constants(
-            **{
-                conf.name: conf.value
-                async for conf in ConfigurableVariable.objects.all()
-            }
+            **{conf.name: conf.value for conf in ConfigurableVariable.objects.all()}
         )
 
 

@@ -1,7 +1,7 @@
 from django.db import models
 from pgvector.django import VectorField
 
-from core.base_model import TimestampedModel
+from core.base_model import TimestampedModel, UnitOfMeasure
 
 
 class BuildingComponentType(models.TextChoices):
@@ -16,15 +16,6 @@ class BuildingComponentType(models.TextChoices):
 class BuildingComponentSubtype(models.TextChoices):
     EXTERIOR = "EXTERIOR"
     INTERIOR = "INTERIOR"
-
-
-class UnitOfMeasure(models.TextChoices):
-    METERS = "METERS"
-    SQUARE_METERS = "SQUARE_METERS"
-    CUBIC_METERS = "CUBIC_METERS"
-    LITERS = "LITERS"
-    KILOGRAMS = "KILOGRAMS"
-    UNIT = "UNIT"
 
 
 class BuildingComponentManager(models.Manager["BuildingComponent"]):

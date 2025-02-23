@@ -4,7 +4,6 @@ from core.base_model import BaseModel, TimestampedModel
 from django.contrib.auth.models import User
 from building_components.models import BuildingComponent
 from materials.models import Material
-from draft_building_designs.tasks import ai_generate_building_design_from_prompt
 
 
 class DraftBuildingDesignKind(models.TextChoices):
@@ -21,6 +20,8 @@ class DraftBuildingDesignManager(models.Manager["DraftBuildingDesign"]):
         address: str,
         owner: User,
     ) -> "DraftBuildingDesign":
+        from draft_building_designs.tasks import generate_building_design_components
+
         draft_building_design = self.create(
             name=name,
             description=description,
@@ -28,8 +29,8 @@ class DraftBuildingDesignManager(models.Manager["DraftBuildingDesign"]):
             address=address,
             owner=owner,
         )
-        ai_generate_building_design_from_prompt.delay(
-            draft_building_design.uuid,
+        generate_building_design_components.delay(
+            draft_building_design_uuid=draft_building_design.uuid,
         )
         return draft_building_design
 

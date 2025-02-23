@@ -29,6 +29,8 @@ class TimestampedModel(BaseModel):
 
 class UnitOfMeasure(models.TextChoices):
     METERS = "METERS"
+    CENTIMETERS = "CENTIMETERS"
+    MILLIMETERS = "MILLIMETERS"
     SQUARE_METERS = "SQUARE_METERS"
     CUBIC_METERS = "CUBIC_METERS"
     LITERS = "LITERS"

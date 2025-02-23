@@ -60,4 +60,4 @@ def refresh_db_constants(
 
     from core.db_constants import constants
 
-    async_to_sync(constants.set_values)()
+    constants.set_values()

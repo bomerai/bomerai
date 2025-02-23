@@ -1,13 +1,18 @@
 from celery import shared_task
-
-from draft_building_designs.services.ai_generate_building_design_from_prompt import (
-    ai_generate_building_design_from_prompt as ai_generate_building_design_from_prompt_func,
+import structlog
+from draft_building_designs.services.ai_building_design_generation import (
+    generate_building_design_components as generate_building_design_components_func,
 )
+
+logger = structlog.get_logger(__name__)
 
 
 @shared_task
-def ai_generate_building_design_from_prompt(
-    prompt: str,
+def generate_building_design_components(
     draft_building_design_uuid: str,
 ):
-    ai_generate_building_design_from_prompt_func(prompt, draft_building_design_uuid)
+    """Generate a building design from a"""
+    logger.info(
+        f"Generating building design components with uuid {draft_building_design_uuid}",
+    )
+    generate_building_design_components_func(draft_building_design_uuid)

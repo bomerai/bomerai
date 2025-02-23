@@ -1,0 +1,13 @@
+"""Celery settings."""
+
+from core.constants import (
+    CELERY_BROKER_URL,
+)
+
+__all__ = (
+    "CELERY_BROKER_URL",
+    "DJANGO_STRUCTLOG_CELERY_ENABLED",
+)
+
+DJANGO_STRUCTLOG_CELERY_ENABLED = True
+CELERY_BROKER_URL = CELERY_BROKER_URL
