@@ -1,0 +1,49 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+{% load admin_urls %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static "admin/css/forms.css" %}">
+{% endblock %}
+{% block bodyclass %}{{ block.super }} {{ opts.app_label }}-{{ opts.model_name }} change-form{% endblock %}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+&rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+&rsaquo; Rotate Encryption Key
+</div>
+{% endblock %}
+{% block content %}<div id="content-main">
+<form method="post" id="{{ opts.model_name }}_form">{% csrf_token %}{% block form_top %}{% endblock %}
+<div>
+
+<p>Enter the old key and the new key.</p>
+
+<fieldset class="module aligned">
+<div class="form-row field-old_key">
+  {{ form.old_key.errors }}
+  <div class="flex-container">{{ form.old_key.label_tag }} {{ form.old_key }}</div>
+  {% if form.old_key.help_text %}
+  <div class="help"{% if form.old_key.id_for_label %} id="{{ form.old_key.id_for_label }}_helptext"{% endif %}>{{ form.old_key.help_text|safe }}</div>
+  {% endif %}
+</div>
+
+<div class="form-row field-new_key">
+  {{ form.new_key.errors }}
+  <div class="flex-container">{{ form.new_key.label_tag }} {{ form.new_key }}</div>
+  {% if form.new_key.help_text %}
+  <div class="help"{% if form.new_key.id_for_label %} id="{{ form.new_key.id_for_label }}_helptext"{% endif %}>{{ form.new_key.help_text|safe }}</div>
+  {% endif %}
+</div>
+
+</fieldset>
+
+<div class="submit-row">
+  <input type="submit" name="rotate-key" value="Rotate key" class="default rotate-key">
+</div>
+
+</div>
+</form></div>
+{% endblock %}
