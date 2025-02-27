@@ -1,0 +1,38 @@
+---
+pre-commit:
+  parallel: true
+  commands:
+    forge-application-service:
+      glob: "services/forge-application-service/**/*.py"
+      root: services/forge-application-service
+      poetry-lock:
+        files: git diff --name-only --cached --diff-filter=AM -- pyproject.toml poetry.lock
+        run: poetry check --lock # {files}
+      python-formatting:
+        files: git diff --name-only --cached --diff-filter=AM -- '*.py' '*.pyi'
+        run: poetry run black --check -- {files}
+      python-linting:
+        files: git diff --name-only --cached --diff-filter=AM -- '*.py' '*.pyi'
+        run: poetry run ruff check -- {files} --force-exclude
+      python-type-checking:
+        files: git diff --name-only --cached --diff-filter=AM -- '*.py' '*.pyi'
+        run: poetry run mypy -- {files}
+
+pre-push:
+  parallel: true
+  commands:
+    poetry-lock:
+      files: git ls-files -- pyproject.toml poetry.lock
+      run: poetry check --lock # {files}
+    python-formatting:
+      files: git ls-files -- '*.py' '*.pyi'
+      run: poetry run black --check -- {files}
+    python-linting:
+      files: git ls-files -- '*.py' '*.pyi'
+      run: poetry run ruff check -- {files} --force-exclude
+    python-type-checking:
+      files: git ls-files -- '*.py' '*.pyi'
+      run: poetry run mypy -- {files}
+    python-test:
+      glob: "*_test.py"
+      run: poetry run pytest --verbosity=0 -p no:sugar {all_files}

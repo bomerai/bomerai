@@ -1,0 +1,66 @@
+volumes:
+  pgdata:
+  s3ninjadata:
+
+x-shared-defaults: &shared-defaults
+  environment:
+    SERVICE_DATABASE_URL: "postgresql://service_app_user:@database.local:5432/django"
+    SERVICE_PORT: "3000"
+    CELERY_BROKER_URL: "rabbitmq.local"
+  env_file:
+    - ./services/ai-bom-forge-service/.env
+  build:
+    context: .
+    dockerfile: container/Dockerfile
+    target: image
+    # secrets:
+    #   - aws_codeartifact_auth_token
+  image: "ai-bom-forge-service:latest"
+  depends_on:
+    - database
+
+x-celery-defaults: &celery-defaults
+  <<: *shared-defaults
+  depends_on:
+    - database
+    - rabbitmq
+  entrypoint:
+    - celery
+
+services:
+  database:
+    image: pgvector/pgvector:pg13
+    volumes:
+      - "pgdata:/var/lib/postgresql/data"
+    ports:
+      - "5432:5432"
+    hostname: database.local
+    environment:
+      POSTGRES_DB: django
+      POSTGRES_USER: service_app_user
+      POSTGRES_HOST_AUTH_METHOD: trust
+
+  celery-beat:
+    <<: *celery-defaults
+    command:
+      - -A
+      - celery_worker
+      - beat
+      - -l
+      - info
+      - --scheduler
+      - django_celery_beat.schedulers:DatabaseScheduler
+
+  rabbitmq:
+    image: rabbitmq:3.13
+    hostname: rabbitmq.local
+    ports:
+      - "5672:5672"
+
+  s3ninja:
+    image: scireum/s3-ninja:8.3.3
+    ports:
+      - "9000:9000"
+    hostname: s3.local
+    volumes:
+      - "s3ninjadata:/home/sirius/data"
