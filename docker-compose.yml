@@ -11,7 +11,7 @@ x-shared-defaults: &shared-defaults
     - ./services/ai-bom-forge-service/.env
   build:
     context: .
-    dockerfile: container/Dockerfile
+    dockerfile: ./services/ai-bom-forge-service/container/Dockerfile
     target: image
     # secrets:
     #   - aws_codeartifact_auth_token
