@@ -1,10 +1,8 @@
 "use client";
 
-import CostEstimatorForm from "@/components/project-cost-estimator/cost-estimator-form";
 import { Button } from "@/components/ui/button";
-import { EyeIcon, PlusIcon } from "lucide-react";
+import { PlusIcon } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogClose,
@@ -15,14 +13,45 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Card, CardFooter, CardHeader, CardTitle } from "../ui/card";
+import ProjectCreateForm from "./project/project-create-form";
+import { Project } from "@/lib/rest-types";
+import useSWR from "swr";
+import ProjectCard from "./project/project-card";
+
+const fetcher = (url: string) =>
+  fetch(url, {
+    credentials: "include",
+    mode: "cors",
+  }).then((res) => res.json() as Promise<Project[]>);
 
 export default function ProjectsPage() {
-  const router = useRouter();
+  const {
+    data: projects,
+    isLoading,
+    error,
+  } = useSWR<Project[]>(
+    `${process.env.NEXT_PUBLIC_FORGE_SERVICE_API_URL}/api/v1/projects/`,
+    fetcher
+  );
+
+  console.log(projects);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
+
+  if (!projects) {
+    return <div>No projects found</div>;
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between px-8 py-4 border-b">
-        <nav className="font-medium text-lg flex items-center gap-2">
+        <nav className="font-medium text-xl flex items-center gap-2">
           <Link href="/projects" className="hover:text-primary">
             Projetos
           </Link>
@@ -34,76 +63,11 @@ export default function ProjectsPage() {
       </div>
 
       <div className="px-8 py-4">
-        <h1 className="font-bold mb-4">Recentes</h1>
+        <h1 className="font-bold mb-4 text-xl">Construções recentes</h1>
         <div className="grid grid-cols-3 gap-4">
-          <Card className="h-[300px] justify-between flex flex-col hover:cursor-pointer">
-            <CardHeader>
-              <CardTitle className="space-y-2">
-                <p className="text-sm font-medium tracking-wide text-anchor">
-                  100m², 3 dormitórios, 2 banheiros, 1 sala de estar, 1 cozinha
-                </p>
-                <h4 className="font-bold text-lg">
-                  Casa T3, Gondufe, Ponte de Lima
-                </h4>
-              </CardTitle>
-            </CardHeader>
-            <CardFooter>
-              <div className="flex justify-between border-t-2 w-full py-4">
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <div>
-                    <p>
-                      <span className="font-bold">Cliente:</span> João da Silva
-                    </p>
-                    <p>
-                      <span className="font-bold">Data de criação:</span>{" "}
-                      10/01/2024
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={() => router.push(`/projects/1`)}
-                >
-                  <EyeIcon className="w-4 h-4 mr-1" />
-                  Ver projeto
-                </Button>
-              </div>
-            </CardFooter>
-          </Card>
-          <Card className="h-[300px] justify-between flex flex-col hover:cursor-pointer">
-            <CardHeader>
-              <CardTitle className="space-y-2">
-                <p className="text-sm font-medium tracking-wide text-anchor">
-                  100m², 3 dormitórios, 2 banheiros, 1 sala de estar, 1 cozinha
-                </p>
-                <h4 className="font-bold text-lg">
-                  Casa T3, Gondufe, Ponte de Lima
-                </h4>
-              </CardTitle>
-            </CardHeader>
-            <CardFooter>
-              <div className="flex justify-between border-t-2 w-full py-4">
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <div>
-                    <p>
-                      <span className="font-bold">Cliente:</span> João da Silva
-                    </p>
-                    <p>
-                      <span className="font-bold">Data de criação:</span>{" "}
-                      10/01/2024
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={() => router.push(`/projects/2`)}
-                >
-                  <EyeIcon className="w-4 h-4 mr-1" />
-                  Ver projeto
-                </Button>
-              </div>
-            </CardFooter>
-          </Card>
+          {projects?.map((project) => (
+            <ProjectCard key={project.uuid} project={project} />
+          ))}
         </div>
       </div>
     </div>
@@ -127,7 +91,7 @@ export function AddProjectDialog() {
           </DialogDescription>
         </DialogHeader>
         <div className="flex items-center space-x-2">
-          <CostEstimatorForm />
+          <ProjectCreateForm />
         </div>
         <DialogFooter className="sm:justify-start">
           <DialogClose asChild>

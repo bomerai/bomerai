@@ -1,10 +1,15 @@
 from django.db import models
-from core.base_model import TimestampedBaseModel
-from django.contrib.auth.models import User
+from core.base_model import AuditableBaseModel
 
 
-class Project(TimestampedBaseModel):
+class Project(
+    AuditableBaseModel,
+    created_related_name="created_projects",
+    updated_related_name="updated_projects",
+):
     name = models.CharField(max_length=255)
     description = models.TextField()
-    customer_name = models.CharField(max_length=255)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    reference = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name

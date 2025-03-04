@@ -52,7 +52,6 @@ DJANGO_CSRF_TRUSTED_ORIGINS = env.json(
     [
         "http://localhost:3000",
         "https://forge.development.bomerai.com",
-        "https://forge.staging.bomerai.com",
     ],
 )
 

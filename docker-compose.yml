@@ -8,14 +8,14 @@ x-shared-defaults: &shared-defaults
     SERVICE_PORT: "3000"
     CELERY_BROKER_URL: "rabbitmq.local"
   env_file:
-    - ./services/ai-bom-forge-service/.env
+    - ./services/bomer-forge-service/.env
   build:
     context: .
-    dockerfile: ./services/ai-bom-forge-service/container/Dockerfile
+    dockerfile: ./services/bomer-forge-service/container/Dockerfile
     target: image
     # secrets:
     #   - aws_codeartifact_auth_token
-  image: "ai-bom-forge-service:latest"
+  image: "bomer-forge-service:latest"
   depends_on:
     - database
 

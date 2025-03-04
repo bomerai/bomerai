@@ -4,9 +4,17 @@ import "./globals.css";
 import Link from "next/link";
 import { Building } from "lucide-react";
 import localFont from "next/font/local";
+import { IBM_Plex_Sans } from "next/font/google";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
+
+const IBMPlexSans = IBM_Plex_Sans({
+  subsets: ["latin"],
+  variable: "--font-ibm-plex-sans",
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
+});
 
 const suisse = localFont({
   src: [
@@ -65,9 +73,7 @@ export default function RootLayout({
   const pathname = usePathname();
   return (
     <html lang="en" className="light">
-      <body
-        className={`${suisse.variable} ${nbInternationalPro.className} antialiased`}
-      >
+      <body className={`${IBMPlexSans.className} antialiased`}>
         <GoogleOAuthProvider
           clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}
         >

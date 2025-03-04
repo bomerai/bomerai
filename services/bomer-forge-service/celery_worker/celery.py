@@ -50,6 +50,7 @@ app.conf.task_soft_time_limit = 600  # 10 minutes
 
 app.conf.task_routes = {
     "draft_building_designs.tasks.*": {"queue": QueuesNames.FORGE_USER},
+    "building_components.tasks.*": {"queue": QueuesNames.FORGE_USER},
 }
 
 # ruff: noqa: ERA001

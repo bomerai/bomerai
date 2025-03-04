@@ -1,5 +1,5 @@
 import { BoxIcon, ChevronDown, ToyBrick, XIcon } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "../../ui/button";
 import { useRouter } from "next/navigation";
 
 export default function BuildComponentSidebar() {

@@ -15,11 +15,24 @@ Including another URLconf
 """
 
 from django.contrib import admin
+from django.http import JsonResponse
 from django.urls import path, include
 from core.google_auth import login_with_google
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.middleware.csrf import get_token
+
+
+@ensure_csrf_cookie
+def get_csrf_token(request):
+    csrf_token = get_token(request)
+    return JsonResponse({"csrfToken": csrf_token})
+
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api/v1/auth/csrf/", get_csrf_token),
     path("api/v1/auth/google/", login_with_google),
-    path("api/v1/", include("building_components.urls")),
+    path("api/v1/", include("projects.rest.urls")),
+    path("api/v1/", include("draft_building_designs.rest.urls")),
+    path("api/v1/", include("building_components.rest.urls")),
 ]

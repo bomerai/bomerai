@@ -1,7 +1,7 @@
 from django.db import models
 from pgvector.django import VectorField
 
-from core.base_model import TimestampedBaseModel, UnitOfMeasure, BaseModel
+from core.base_model import UnitOfMeasure, BaseModel, AuditableBaseModel
 from materials.models import Material
 
 
@@ -73,14 +73,13 @@ class BuildingComponentManager(models.Manager["BuildingComponent"]):
         )
 
 
-class BuildingComponent(TimestampedBaseModel):
+class BuildingComponent(BaseModel):
     """
     A building component is a part of a building design.
     It can be a wall, floor, ceiling, door, window, etc.
     """
 
     description = models.TextField(blank=True)
-    dimensions = models.JSONField(help_text="The dimensions of the component")
     component_data = models.JSONField(
         help_text="The data for the component",
         null=True,
@@ -150,22 +149,3 @@ class BuildingComponentMaterial(BaseModel):
     quantity = models.IntegerField(default=0)
     unit = models.CharField(max_length=255, choices=UnitOfMeasure.choices)
     justification = models.TextField(default="")
-
-
-class ColumnReinforcementDetails(BaseModel):
-    """
-    This model represents the reinforcement details of a column.
-    It is used to store the reinforcement details of a column in a building component.
-    """
-
-    pillar_id = models.CharField(max_length=255)
-    pillar_perimeter = models.CharField(max_length=255)
-    longitudinal_rebar = models.CharField(max_length=255)
-    starter_rebar = models.CharField(max_length=255)
-    starter_rebar_number = models.IntegerField()
-    stirrup_diameter = models.CharField(max_length=255)
-    stirrups_distribution = models.JSONField(null=True)
-
-    def __str__(self):
-        """Return a string representation of the column reinforcement details."""
-        return f"{self.pillar_id} - {self.longitudinal_rebar}"

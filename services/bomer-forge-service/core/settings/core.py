@@ -1,4 +1,6 @@
 from pathlib import Path
+import os
+from google.oauth2 import service_account
 
 from core.constants import (
     DJANGO_ALLOWED_HOSTS,
@@ -20,7 +22,7 @@ __all__ = (
     "BASE_DIR",
     "CSRF_COOKIE_SAMESITE",
     "CSRF_COOKIE_SECURE",
-    "CSRF_HEADER_NAME",
+    # "CSRF_HEADER_NAME",
     "CSRF_TRUSTED_ORIGINS",
     "CSRF_USE_SESSIONS",
     "DATABASES",
@@ -64,9 +66,40 @@ SESSION_COOKIE_SECURE = DJANGO_SESSION_COOKIE_SECURE
 
 CSRF_COOKIE_SAMESITE = DJANGO_CSRF_COOKIE_SAMESITE
 CSRF_COOKIE_SECURE = DJANGO_CSRF_COOKIE_SECURE
-CSRF_HEADER_NAME = DJANGO_CSRF_HEADER_NAME
+# CSRF_HEADER_NAME = DJANGO_CSRF_HEADER_NAME
 CSRF_TRUSTED_ORIGINS = DJANGO_CSRF_TRUSTED_ORIGINS
 CSRF_USE_SESSIONS = DJANGO_CSRF_USE_SESSIONS
+
+
+# Google Cloud Storage Settings
+GS_BUCKET_NAME = "bomer-forge-service-bucket"
+GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
+    os.path.join(BASE_DIR, "secrets/bomer-ai-5903df29fa96.json")
+)
+GS_PROJECT_ID = "bomer-ai"
+
+# Configure Django to use GCS for file storage
+DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
+
+# Optional settings
+GS_FILE_OVERWRITE = False  # Don't overwrite existing files
+GS_DEFAULT_ACL = "publicRead"  # Make files publicly readable
+GS_LOCATION = "media"  # Prefix for uploaded files
+
+# Storages
+STORAGES = {
+    "default": {
+        "BACKEND": DEFAULT_FILE_STORAGE,
+        "OPTIONS": {
+            "bucket_name": GS_BUCKET_NAME,
+            "project_id": GS_PROJECT_ID,
+            "credentials": GS_CREDENTIALS,
+        },
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
 
 # Application definition

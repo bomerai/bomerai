@@ -6,3 +6,7 @@ class DraftBuildingDesignSerializer(serializers.ModelSerializer):
     class Meta:
         model = DraftBuildingDesign
         fields = "__all__"
+
+
+class CreateDraftBuildingDesignSerializer(serializers.Serializer):
+    project_uuid = serializers.UUIDField()
