@@ -41,6 +41,9 @@ class DraftBuildingDesignManager(models.Manager["DraftBuildingDesign"]):
         from draft_building_designs.services.extract_footing_from_design_drawing_file import (
             extract_footing_metadata,
         )
+        from draft_building_designs.services.extract_columns_from_design_drawing_file import (
+            extract_columns_metadata,
+        )
 
         logger.info(
             f"Uploading drawing design for building design {building_design_uuid}"
@@ -54,19 +57,36 @@ class DraftBuildingDesignManager(models.Manager["DraftBuildingDesign"]):
             type=DesignDrawingPlanType(design_drawing_plan_type),
             subtype=DesignDrawingPlanSubtype(design_drawing_plan_subtype),
         )
-        for file in files:
-            doc = DesignDrawingDocument.objects.create(
-                design_drawing_plan=design_drawing_plan,
-                file=file,
-            )
-            logger.info(f"Extracting footing metadata for document {doc.uuid}")
-            footing = extract_footing_metadata(
-                drawing_document_uuid=str(doc.uuid), language_code="pt"
-            )
-            design_drawing_plan.plan_metadata = footing.model_dump()
-            design_drawing_plan.justification = footing.justification
-            design_drawing_plan.save()
-            logger.info(f"Footing metadata: {design_drawing_plan.plan_metadata}")
+
+        if design_drawing_plan.subtype == DesignDrawingPlanSubtype.FOOTING:
+            for file in files:
+                doc = DesignDrawingDocument.objects.create(
+                    design_drawing_plan=design_drawing_plan,
+                    file=file,
+                )
+                logger.info(f"Extracting footing metadata for document {doc.uuid}")
+                footing = extract_footing_metadata(
+                    drawing_document_uuid=str(doc.uuid), language_code="pt"
+                )
+                design_drawing_plan.plan_metadata = footing.model_dump()
+                design_drawing_plan.justification = footing.justification
+                design_drawing_plan.save()
+                logger.info(f"Footing metadata: {design_drawing_plan.plan_metadata}")
+
+        elif design_drawing_plan.subtype == DesignDrawingPlanSubtype.COLUMN:
+            for file in files:
+                doc = DesignDrawingDocument.objects.create(
+                    design_drawing_plan=design_drawing_plan,
+                    file=file,
+                )
+                logger.info(f"Extracting columns metadata for document {doc.uuid}")
+                columns = extract_columns_metadata(
+                    drawing_document_uuid=str(doc.uuid),
+                    language_code="pt",
+                )
+                design_drawing_plan.plan_metadata = columns.model_dump()
+                design_drawing_plan.save()
+                logger.info(f"Columns metadata: {design_drawing_plan.plan_metadata}")
 
 
 class DraftBuildingDesignPhase(models.TextChoices):
@@ -187,6 +207,7 @@ class DesignDrawingPlan(BaseModel):
         on_delete=models.CASCADE,
         related_name="design_drawing_plans",
     )
+    name = models.CharField(max_length=255)
     description = models.TextField(null=True)
     type = models.CharField(max_length=255, choices=DesignDrawingPlanType.choices)
     subtype = models.CharField(max_length=255, choices=DesignDrawingPlanSubtype.choices)
