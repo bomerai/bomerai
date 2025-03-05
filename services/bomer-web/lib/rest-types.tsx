@@ -40,6 +40,7 @@ export type ColumnReinforcementMetadata = z.infer<
 
 export const DesignDrawingPlanSchema = z.object({
   uuid: z.string(),
+  name: z.string(),
   description: z.string(),
   type: z.enum(["FOUNDATION_PLAN", "FRAMING_PLAN"]),
   subtype: z.enum(["FOOTING", "COLUMN", "BEAM", "SLAB"]),

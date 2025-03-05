@@ -7,13 +7,13 @@ import { z } from "zod";
 import Cookies from "js-cookie";
 import { Trash2 } from "lucide-react";
 
-interface PilarPlanFileUploaderProps {
+interface ColumnPlanFileUploaderProps {
   buildingDesignUuid: string;
 }
 
-export default function PilarPlanFileUploader({
+export default function ColumnPlanFileUploader({
   buildingDesignUuid,
-}: PilarPlanFileUploaderProps) {
+}: ColumnPlanFileUploaderProps) {
   const formSchema = z.object({
     files: z.array(z.instanceof(File)),
   });
@@ -85,9 +85,12 @@ export default function PilarPlanFileUploader({
       formData.append("files", file);
     });
     formData.append("building_design_uuid", buildingDesignUuid as string);
+    formData.append("design_drawing_type", "STRUCTURAL_DRAWING");
+    formData.append("design_drawing_plan_type", "FRAMING_PLAN");
+    formData.append("design_drawing_plan_subtype", "COLUMN");
 
     const resp = await fetch(
-      `${process.env.NEXT_PUBLIC_FORGE_SERVICE_API_URL}/api/v1/building-components/ingest-foundation-metadata/`,
+      `${process.env.NEXT_PUBLIC_FORGE_SERVICE_API_URL}/api/v1/draft-building-designs/${buildingDesignUuid}/upload-drawing-design/`,
       {
         method: "POST",
         body: formData,
@@ -117,10 +120,9 @@ export default function PilarPlanFileUploader({
 
   return (
     <div className="w-full max-w-md">
-      <h4 className="text-lg font-bold">Fundação</h4>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <Label htmlFor="projectDescription">Sapatas</Label>
+          <Label htmlFor="projectDescription">Arquivos</Label>
           <div
             className={`border-2 border-dashed rounded-lg p-6 text-center ${
               dragActive ? "border-blue-500 bg-blue-50" : "border-gray-300"

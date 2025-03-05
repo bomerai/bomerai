@@ -26,6 +26,8 @@ import BuildComponentSidebar from "@/components/draft-building-designs/build-com
 import { useQuery } from "@tanstack/react-query";
 import { DesignDrawing } from "@/lib/rest-types";
 import FootingPlanCard from "@/components/draft-building-designs/design-drawings/footing-plan-card";
+import ColumnPlanFileUploader from "@/components/draft-building-designs/design-drawings/column-plan-file-uploader";
+import PilarPlanCard from "@/components/draft-building-designs/design-drawings/column-plan-card";
 
 const getDesignDrawings = async (
   buildingDesignUuid: string
@@ -52,14 +54,23 @@ export default function DesignDrawingsPage() {
     queryFn: () => getDesignDrawings(buildingDesignUuid as string),
   });
 
-  const footingDesignDrawings = designDrawings?.filter(
+  const structuralDesignDrawings = designDrawings?.filter(
     (designDrawing) => designDrawing.type === "STRUCTURAL_DRAWING"
   );
 
-  const footingDesignDrawingPlans = footingDesignDrawings?.flatMap(
-    (designDrawing) => designDrawing.design_drawing_plans
+  const footingDesignDrawingPlans = structuralDesignDrawings?.flatMap(
+    (designDrawing) =>
+      designDrawing.design_drawing_plans.filter(
+        (designDrawingPlan) => designDrawingPlan.subtype === "FOOTING"
+      )
   );
 
+  const columnDesignDrawingPlans = structuralDesignDrawings?.flatMap(
+    (designDrawing) =>
+      designDrawing.design_drawing_plans.filter(
+        (designDrawingPlan) => designDrawingPlan.subtype === "COLUMN"
+      )
+  );
   return (
     <div className="flex flex-col flex-grow relative overflow-y-auto h-screen">
       {/* page header */}
@@ -207,67 +218,13 @@ export default function DesignDrawingsPage() {
                   <h3 className="font-medium text-lg">
                     Especificações de colunas
                   </h3>
-                  <PilarPlanFileUploaderDialog />
+                  <ColumnPlanFileUploaderDialog />
                 </div>
                 {/* Existing footing plans */}
                 <div className="flex flex-col gap-4">
-                  <div className="p-6 bg-white border rounded flex items-start justify-between gap-12">
-                    <div className="flex flex-col space-y-4 flex-1">
-                      <div>
-                        <h4 className="font-semibold">Sapata 1</h4>
-                        <p className="text-sm text-muted-foreground">
-                          Sapata 1 é uma sapata de fundação que suporta a carga
-                          do pilar 1.
-                        </p>
-                      </div>
-
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex flex-col">
-                          <div className="font-medium">Largura (cm)</div>
-                          <div className="">75</div>
-                        </div>
-                        <div className="flex flex-col border-l pl-4">
-                          <div className="font-medium">Comprimento (cm)</div>
-                          <div className="">75</div>
-                        </div>
-                        <div className="flex flex-col border-l pl-4">
-                          <div className="font-medium">Altura (cm)</div>
-                          <div className="">40</div>
-                        </div>
-                        <div className="flex flex-col border-l pl-4">
-                          <div className="font-medium">Referências</div>
-                          <div className="italic">Aguardando pilares</div>
-                        </div>
-                      </div>
-                      <hr className="w-full border-t border/60" />
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex flex-col">
-                          <div className="font-medium">Armadura Inf. X</div>
-                          <div className="">ø8//30</div>
-                        </div>
-                        <div className="flex flex-col border-l pl-4">
-                          <div className="font-medium">Armadura Inf. Y</div>
-                          <div className="">ø8//30</div>
-                        </div>
-                        <div className="flex flex-col border-l pl-4">
-                          <div className="font-medium">Armadura Sup. X</div>
-                          <div className="">ø12//30</div>
-                        </div>
-                        <div className="flex flex-col border-l pl-4">
-                          <div className="font-medium">Armadura Sup. Y</div>
-                          <div className="">ø12//30</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div>
-                      <Button variant="ghost">
-                        <Trash2 className="w-4 h-4 text-anchor" />
-                      </Button>
-                      <Button variant="ghost">
-                        <Pencil className="w-4 h-4 text-anchor" />
-                      </Button>
-                    </div>
-                  </div>
+                  {columnDesignDrawingPlans?.map((column) => (
+                    <PilarPlanCard key={column.uuid} column={column} />
+                  ))}
                 </div>
               </div>
 
@@ -368,6 +325,40 @@ export function PilarPlanFileUploaderDialog() {
         </DialogHeader>
         <div className="flex items-center space-x-2">
           <FootingPlanFileUploader
+            buildingDesignUuid={buildingDesignUuid as string}
+          />
+        </div>
+        <DialogFooter className="sm:justify-start">
+          <DialogClose asChild>
+            <Button type="button" variant="secondary">
+              Fechar
+            </Button>
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function ColumnPlanFileUploaderDialog() {
+  const { uuid: buildingDesignUuid } = useParams();
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="ghost">
+          <PlusIcon className="w-4 h-4 mr-1" />
+          Adicionar colunas
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Especificações de colunas</DialogTitle>
+          <DialogDescription>
+            Adicione uma ou mais colunas para começar a trabalhar.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex items-center space-x-2">
+          <ColumnPlanFileUploader
             buildingDesignUuid={buildingDesignUuid as string}
           />
         </div>
