@@ -8,34 +8,14 @@ import { IBM_Plex_Sans } from "next/font/google";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools"; // Optional but recommended for development
 
 const IBMPlexSans = IBM_Plex_Sans({
   subsets: ["latin"],
   variable: "--font-ibm-plex-sans",
   display: "swap",
   weight: ["400", "500", "600", "700"],
-});
-
-const suisse = localFont({
-  src: [
-    {
-      path: "./fonts/suisse/SuisseIntl-Regular-WebM.woff2",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "./fonts/suisse/SuisseIntl-Bold-WebS.woff2",
-      weight: "800",
-      style: "bold",
-    },
-    {
-      path: "./fonts/suisse/SuisseIntl-Medium-WebM.woff2",
-      weight: "500",
-      style: "medium",
-    },
-  ],
-  variable: "--font-suisse",
-  display: "swap",
 });
 
 const nbInternationalPro = localFont({
@@ -71,40 +51,47 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
+  const queryClient = new QueryClient();
   return (
     <html lang="en" className="light">
       <body className={`${IBMPlexSans.className} antialiased`}>
-        <GoogleOAuthProvider
-          clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}
-        >
-          <div
-            className={cn("pl-[200px] h-full", pathname === "/login" && "pl-0")}
+        <QueryClientProvider client={queryClient}>
+          <GoogleOAuthProvider
+            clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}
           >
             <div
-              id="sidebar"
               className={cn(
-                "fixed bg-surface-2 top-0 left-0 h-full w-[200px] border-r shadow-md",
-                pathname === "/login" && "hidden"
+                "pl-[200px] h-full",
+                pathname === "/login" && "pl-0"
               )}
             >
-              <div className="">
-                <ul className="py-6">
-                  <li className="">
-                    <Link
-                      href="/"
-                      className="flex items-center gap-2 text-md p-4 hover:bg-anchor/20 font-bold "
-                    >
-                      <Building className="w-5 h-5 mr-2" />
-                      Projetos
-                    </Link>
-                  </li>
-                </ul>
+              <div
+                id="sidebar"
+                className={cn(
+                  "fixed bg-surface-2 top-0 left-0 h-full w-[200px] border-r shadow-md",
+                  pathname === "/login" && "hidden"
+                )}
+              >
+                <div className="">
+                  <ul className="py-6">
+                    <li className="">
+                      <Link
+                        href="/"
+                        className="flex items-center gap-2 text-md p-4 hover:bg-anchor/20 font-bold "
+                      >
+                        <Building className="w-5 h-5 mr-2" />
+                        Projetos
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
               </div>
-            </div>
 
-            <div className="h-full">{children}</div>
-          </div>
-        </GoogleOAuthProvider>
+              <div className="h-full">{children}</div>
+            </div>
+          </GoogleOAuthProvider>
+          {process.env.NODE_ENV === "development" && <ReactQueryDevtools />}
+        </QueryClientProvider>
       </body>
     </html>
   );

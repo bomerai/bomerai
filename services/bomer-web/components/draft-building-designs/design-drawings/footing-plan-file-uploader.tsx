@@ -85,9 +85,12 @@ export default function FootingPlanFileUploader({
       formData.append("files", file);
     });
     formData.append("building_design_uuid", buildingDesignUuid as string);
+    formData.append("design_drawing_type", "STRUCTURAL_DRAWING");
+    formData.append("design_drawing_plan_type", "FOUNDATION_PLAN");
+    formData.append("design_drawing_plan_subtype", "FOOTING");
 
     const resp = await fetch(
-      `${process.env.NEXT_PUBLIC_FORGE_SERVICE_API_URL}/api/v1/building-components/ingest-foundation-metadata/`,
+      `${process.env.NEXT_PUBLIC_FORGE_SERVICE_API_URL}/api/v1/draft-building-designs/${buildingDesignUuid}/upload-drawing-design/`,
       {
         method: "POST",
         body: formData,

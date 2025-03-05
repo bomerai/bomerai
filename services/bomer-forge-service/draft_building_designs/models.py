@@ -1,13 +1,18 @@
+import structlog
+from django.core.files.base import File
 from django.db import models
 
-from core.base_model import BaseModel
 from building_components.models import BuildingComponent
+from core.base_model import BaseModel
 from projects.models import Project
+
+logger = structlog.get_logger(__name__)
 
 
 class DraftBuildingDesignManager(models.Manager["DraftBuildingDesign"]):
     def create_draft_building_design(
         self,
+        *,
         project_uuid: str,
         name: str,
         description: str,
@@ -20,6 +25,48 @@ class DraftBuildingDesignManager(models.Manager["DraftBuildingDesign"]):
         )
 
         return draft_building_design
+
+    def upload_drawing_design(
+        self,
+        *,
+        building_design_uuid: str,
+        files: list[File],
+        design_drawing_type: str,
+        design_drawing_plan_type: str,
+        design_drawing_plan_subtype: str,
+    ):
+        """
+        Upload a drawing design to a draft building design.
+        """
+        from draft_building_designs.services.extract_footing_from_design_drawing_file import (
+            extract_footing_metadata,
+        )
+
+        logger.info(
+            f"Uploading drawing design for building design {building_design_uuid}"
+        )
+        design_drawing, _ = DesignDrawing.objects.get_or_create(
+            building_design_id=building_design_uuid,
+            type=DesignDrawingType(design_drawing_type),
+        )
+        design_drawing_plan = DesignDrawingPlan.objects.create(
+            design_drawing=design_drawing,
+            type=DesignDrawingPlanType(design_drawing_plan_type),
+            subtype=DesignDrawingPlanSubtype(design_drawing_plan_subtype),
+        )
+        for file in files:
+            doc = DesignDrawingDocument.objects.create(
+                design_drawing_plan=design_drawing_plan,
+                file=file,
+            )
+            logger.info(f"Extracting footing metadata for document {doc.uuid}")
+            footing = extract_footing_metadata(
+                drawing_document_uuid=str(doc.uuid), language_code="pt"
+            )
+            design_drawing_plan.plan_metadata = footing.model_dump()
+            design_drawing_plan.justification = footing.justification
+            design_drawing_plan.save()
+            logger.info(f"Footing metadata: {design_drawing_plan.plan_metadata}")
 
 
 class DraftBuildingDesignPhase(models.TextChoices):
@@ -135,10 +182,16 @@ class DesignDrawingPlan(BaseModel):
     A plan of a design drawing.
     """
 
-    design_drawing = models.ForeignKey(DesignDrawing, on_delete=models.CASCADE)
+    design_drawing = models.ForeignKey(
+        DesignDrawing,
+        on_delete=models.CASCADE,
+        related_name="design_drawing_plans",
+    )
+    description = models.TextField(null=True)
     type = models.CharField(max_length=255, choices=DesignDrawingPlanType.choices)
     subtype = models.CharField(max_length=255, choices=DesignDrawingPlanSubtype.choices)
     plan_metadata = models.JSONField(null=True)
+    justification = models.TextField(null=True)
     documents = models.ManyToManyField(
         "draft_building_designs.DesignDrawingDocument",
         related_name="design_drawings",
@@ -150,7 +203,9 @@ class DesignDrawingPlan(BaseModel):
 
 
 def upload_design_drawing_document(instance, filename):
-    return f"design_drawing_documents/{instance.design_drawing_plan.id}/{filename}"
+    return (
+        f"design_drawing_documents/{str(instance.design_drawing_plan.uuid)}/{filename}"
+    )
 
 
 class DesignDrawingDocument(BaseModel):

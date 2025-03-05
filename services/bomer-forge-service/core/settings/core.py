@@ -73,9 +73,11 @@ CSRF_USE_SESSIONS = DJANGO_CSRF_USE_SESSIONS
 
 # Google Cloud Storage Settings
 GS_BUCKET_NAME = "bomer-forge-service-bucket"
+
 GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
     os.path.join(BASE_DIR, "secrets/bomer-ai-5903df29fa96.json")
 )
+
 GS_PROJECT_ID = "bomer-ai"
 
 # Configure Django to use GCS for file storage

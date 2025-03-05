@@ -1,4 +1,5 @@
 "use client";
+
 import {
   ArrowUpRight,
   ChevronRight,
@@ -22,11 +23,42 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import BuildComponentSidebar from "@/components/draft-building-designs/build-components/build-component-sidebar";
+import { useQuery } from "@tanstack/react-query";
+import { DesignDrawing } from "@/lib/rest-types";
+import FootingPlanCard from "@/components/draft-building-designs/design-drawings/footing-plan-card";
+
+const getDesignDrawings = async (
+  buildingDesignUuid: string
+): Promise<DesignDrawing[]> => {
+  const resp = await fetch(
+    `${process.env.NEXT_PUBLIC_FORGE_SERVICE_API_URL}/api/v1/draft-building-designs/${buildingDesignUuid}/design-drawings/`,
+    {
+      method: "GET",
+      credentials: "include",
+      mode: "cors",
+    }
+  );
+  return resp.json();
+};
+
 export default function DesignDrawingsPage() {
   const { uuid: buildingDesignUuid } = useParams();
 
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab");
+
+  const { data: designDrawings } = useQuery({
+    queryKey: ["design-drawings", buildingDesignUuid],
+    queryFn: () => getDesignDrawings(buildingDesignUuid as string),
+  });
+
+  const footingDesignDrawings = designDrawings?.filter(
+    (designDrawing) => designDrawing.type === "STRUCTURAL_DRAWING"
+  );
+
+  const footingDesignDrawingPlans = footingDesignDrawings?.flatMap(
+    (designDrawing) => designDrawing.design_drawing_plans
+  );
 
   return (
     <div className="flex flex-col flex-grow relative overflow-y-auto h-screen">
@@ -142,63 +174,12 @@ export default function DesignDrawingsPage() {
                 </div>
                 {/* Existing footing plans */}
                 <div className="flex flex-col gap-4">
-                  <div className="p-6 bg-white border rounded flex items-start justify-between gap-12">
-                    <div className="flex flex-col space-y-4 flex-1">
-                      <div>
-                        <h4 className="font-semibold">Sapata 1</h4>
-                        <p className="text-sm text-muted-foreground">
-                          Sapata 1 é uma sapata de fundação que suporta a carga
-                          do pilar 1.
-                        </p>
-                      </div>
-
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex flex-col">
-                          <div className="font-medium">Largura (cm)</div>
-                          <div className="">75</div>
-                        </div>
-                        <div className="flex flex-col border-l pl-4">
-                          <div className="font-medium">Comprimento (cm)</div>
-                          <div className="">75</div>
-                        </div>
-                        <div className="flex flex-col border-l pl-4">
-                          <div className="font-medium">Altura (cm)</div>
-                          <div className="">40</div>
-                        </div>
-                        <div className="flex flex-col border-l pl-4">
-                          <div className="font-medium">Referências</div>
-                          <div className="italic">Aguardando pilares</div>
-                        </div>
-                      </div>
-                      <hr className="w-full border-t border/60" />
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex flex-col">
-                          <div className="font-medium">Armadura Inf. X</div>
-                          <div className="">ø8//30</div>
-                        </div>
-                        <div className="flex flex-col border-l pl-4">
-                          <div className="font-medium">Armadura Inf. Y</div>
-                          <div className="">ø8//30</div>
-                        </div>
-                        <div className="flex flex-col border-l pl-4">
-                          <div className="font-medium">Armadura Sup. X</div>
-                          <div className="">ø12//30</div>
-                        </div>
-                        <div className="flex flex-col border-l pl-4">
-                          <div className="font-medium">Armadura Sup. Y</div>
-                          <div className="">ø12//30</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div>
-                      <Button variant="ghost">
-                        <Trash2 className="w-4 h-4 text-anchor" />
-                      </Button>
-                      <Button variant="ghost">
-                        <Pencil className="w-4 h-4 text-anchor" />
-                      </Button>
-                    </div>
-                  </div>
+                  {footingDesignDrawingPlans?.map((footingPlan) => (
+                    <FootingPlanCard
+                      key={footingPlan.uuid}
+                      footingPlan={footingPlan}
+                    />
+                  ))}
                 </div>
               </div>
 
