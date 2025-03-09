@@ -3,9 +3,9 @@ from draft_building_designs.models import (
     DraftBuildingDesign,
     DesignDrawing,
     DesignDrawingType,
-    DesignDrawingPlanType,
-    DesignDrawingPlanSubtype,
-    DesignDrawingPlan,
+    DesignDrawingComponentMetadata,
+    DesignDrawingComponentMetadataType,
+    DesignDrawingComponentMetadataSubtype,
 )
 
 
@@ -25,22 +25,24 @@ class UploadDrawingDesignSerializer(serializers.Serializer):
     design_drawing_type = serializers.ChoiceField(
         choices=DesignDrawingType.choices,
     )
-    design_drawing_plan_type = serializers.ChoiceField(
-        choices=DesignDrawingPlanType.choices,
+    design_drawing_component_metadata_type = serializers.ChoiceField(
+        choices=DesignDrawingComponentMetadataType.choices,
     )
-    design_drawing_plan_subtype = serializers.ChoiceField(
-        choices=DesignDrawingPlanSubtype.choices,
+    design_drawing_component_metadata_subtype = serializers.ChoiceField(
+        choices=DesignDrawingComponentMetadataSubtype.choices,
     )
 
 
-class DesignDrawingPlanSerializer(serializers.ModelSerializer):
+class DesignDrawingComponentMetadataSerializer(serializers.ModelSerializer):
     class Meta:
-        model = DesignDrawingPlan
+        model = DesignDrawingComponentMetadata
         fields = "__all__"
 
 
 class DesignDrawingSerializer(serializers.ModelSerializer):
-    design_drawing_plans = DesignDrawingPlanSerializer(many=True)
+    design_drawing_components_metadata = DesignDrawingComponentMetadataSerializer(
+        many=True
+    )
 
     class Meta:
         model = DesignDrawing

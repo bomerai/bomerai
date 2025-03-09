@@ -34,5 +34,5 @@ urlpatterns = [
     path("api/v1/auth/google/", login_with_google),
     path("api/v1/", include("projects.rest.urls")),
     path("api/v1/", include("draft_building_designs.rest.urls")),
-    path("api/v1/", include("building_components.rest.urls")),
+    path("api/v1/", include("celery_worker.rest.urls")),
 ]

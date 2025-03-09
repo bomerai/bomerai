@@ -1,4 +1,5 @@
 "use client";
+
 import BuildComponentSidebar from "@/components/draft-building-designs/build-components/build-component-sidebar";
 import { MaterialCostExplorer } from "@/components/materials/material-cost-explorer";
 import { FloorPlanSection } from "@/components/draft-building-designs/build-components/build-component/floor-plan-section";
@@ -8,7 +9,6 @@ import { ArrowUpRight, ChevronRight, SparklesIcon } from "lucide-react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import PillarsSection from "@/components/draft-building-designs/build-components/build-component/pillars-section";
-import DesignDrawingsSection from "@/components/draft-building-designs/design-drawings/design-drawings-section";
 
 export default function BuildingDesignPage() {
   const { uuid } = useParams();
@@ -24,9 +24,6 @@ export default function BuildingDesignPage() {
       case "review":
         // Review section
         return <ReviewSection />;
-      case "design-drawings":
-        // Draft building design drawings
-        return <DesignDrawingsSection />;
       case "pillars":
         // Draft building design components
         return <PillarsSection />;
@@ -120,7 +117,11 @@ export default function BuildingDesignPage() {
           <div className="tab-content flex flex-1 mr-[500px] z-10">
             {renderTabContent()}
           </div>
-          {buildingComponentUuid && <BuildComponentSidebar />}
+          {buildingComponentUuid && (
+            <BuildComponentSidebar
+              designDrawingComponentMetadataUuid={buildingComponentUuid}
+            />
+          )}
           {selectedMaterialEvaluationUuid && <MaterialCostExplorer />}
         </div>
       </div>

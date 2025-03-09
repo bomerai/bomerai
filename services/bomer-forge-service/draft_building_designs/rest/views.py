@@ -7,9 +7,11 @@ from rest_framework.decorators import action
 from draft_building_designs.models import (
     DesignDrawing,
     DraftBuildingDesign,
+    DesignDrawingComponentMetadata,
 )
 from draft_building_designs.rest.serializers import (
     CreateDraftBuildingDesignSerializer,
+    DesignDrawingComponentMetadataSerializer,
     DraftBuildingDesignSerializer,
     DesignDrawingSerializer,
     UploadDrawingDesignSerializer,
@@ -67,16 +69,16 @@ class DraftBuildingDesignViewSet(viewsets.ModelViewSet):
             building_design_uuid=str(building_design.uuid),
             files=serializer.validated_data["files"],
             design_drawing_type=serializer.validated_data["design_drawing_type"],
-            design_drawing_plan_type=serializer.validated_data[
-                "design_drawing_plan_type"
+            design_drawing_component_metadata_type=serializer.validated_data[
+                "design_drawing_component_metadata_type"
             ],
-            design_drawing_plan_subtype=serializer.validated_data[
-                "design_drawing_plan_subtype"
+            design_drawing_component_metadata_subtype=serializer.validated_data[
+                "design_drawing_component_metadata_subtype"
             ],
         )
         return Response(
             DraftBuildingDesignSerializer(building_design).data,
-            status=status.HTTP_200_OK,
+            status=status.HTTP_201_CREATED,
         )
 
     @action(detail=True, methods=["get"], url_path="design-drawings")
@@ -94,3 +96,21 @@ class DraftBuildingDesignViewSet(viewsets.ModelViewSet):
             DesignDrawingSerializer(design_drawings, many=True).data,
             status=status.HTTP_200_OK,
         )
+
+    @action(detail=True, methods=["get"], url_path="design-drawings/summary")
+    def get_design_drawings_summary(self, request, *args, **kwargs):
+        building_design = DraftBuildingDesign.objects.get(uuid=str(kwargs["pk"]))
+        return Response(
+            DesignDrawingSerializer(building_design).data,
+            status=status.HTTP_200_OK,
+        )
+
+
+class DesignDrawingComponentMetadataViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for DesignDrawingComponentMetadata model providing CRUD operations.
+    """
+
+    queryset = DesignDrawingComponentMetadata.objects.all()
+    serializer_class = DesignDrawingComponentMetadataSerializer
+    permission_classes = [IsAuthenticated]

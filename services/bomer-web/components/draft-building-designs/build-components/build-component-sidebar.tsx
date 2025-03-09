@@ -1,15 +1,26 @@
 import { BoxIcon, ChevronDown, ToyBrick, XIcon } from "lucide-react";
 import { Button } from "../../ui/button";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
-export default function BuildComponentSidebar() {
+export default function BuildComponentSidebar({
+  designDrawingComponentMetadataUuid,
+}: {
+  designDrawingComponentMetadataUuid: string;
+}) {
   const router = useRouter();
+
+  useEffect(() => {
+    console.log(designDrawingComponentMetadataUuid);
+  }, [designDrawingComponentMetadataUuid]);
 
   return (
     <div className="bg-white border-l w-[500px] fixed right-0 bottom-0 top-[112px]">
       <div className="min-w-[400px] px-4 py-8 space-y-4">
         <div className="flex justify-between items-center">
-          <h4 className="text-xl font-bold tracking-wide">Parede externa</h4>
+          <h4 className="text-xl font-bold tracking-wide">
+            {designDrawingComponentMetadataUuid}
+          </h4>
           <Button
             variant="ghost"
             onClick={() => {

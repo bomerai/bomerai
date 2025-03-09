@@ -38,28 +38,44 @@ export type ColumnReinforcementMetadata = z.infer<
 
 // -
 
-export const DesignDrawingPlanSchema = z.object({
+export const DesignDrawingComponentMetadataSchema = z.object({
   uuid: z.string(),
   name: z.string(),
   description: z.string(),
   type: z.enum(["FOUNDATION_PLAN", "FRAMING_PLAN"]),
   subtype: z.enum(["FOOTING", "COLUMN", "BEAM", "SLAB"]),
-  plan_metadata: z.any(),
+  data: z.any(),
+  bom: z.any(),
+  is_locked: z.boolean(),
   justification: z.string(),
+  task_id: z.string().optional(),
   created_at: z.string(),
   updated_at: z.string(),
 });
 
-export type DesignDrawingPlan = z.infer<typeof DesignDrawingPlanSchema>;
+export type DesignDrawingComponentMetadata = z.infer<
+  typeof DesignDrawingComponentMetadataSchema
+>;
 
 // -
 
 export const DesignDrawingSchema = z.object({
   uuid: z.string(),
   type: z.enum(["STRUCTURAL_DRAWING"]),
-  design_drawing_plans: z.array(DesignDrawingPlanSchema),
+  design_drawing_components_metadata: z.array(
+    DesignDrawingComponentMetadataSchema
+  ),
   created_at: z.string(),
   updated_at: z.string(),
 });
 
 export type DesignDrawing = z.infer<typeof DesignDrawingSchema>;
+
+// -
+
+export const CeleryTaskResultSchema = z.object({
+  status: z.enum(["PENDING", "SUCCESS", "FAILURE", "RETRY", "STARTED"]),
+  result: z.any(),
+});
+
+export type CeleryTaskResult = z.infer<typeof CeleryTaskResultSchema>;

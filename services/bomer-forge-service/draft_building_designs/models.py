@@ -32,16 +32,16 @@ class DraftBuildingDesignManager(models.Manager["DraftBuildingDesign"]):
         building_design_uuid: str,
         files: list[File],
         design_drawing_type: str,
-        design_drawing_plan_type: str,
-        design_drawing_plan_subtype: str,
+        design_drawing_component_metadata_type: str,
+        design_drawing_component_metadata_subtype: str,
     ):
         """
         Upload a drawing design to a draft building design.
         """
-        from draft_building_designs.services.extract_footing_from_design_drawing_file import (
-            extract_footing_metadata,
+        from draft_building_designs.services.ai_drawing_component_footing_extractor import (
+            extract_footings_metadata,
         )
-        from draft_building_designs.services.extract_columns_from_design_drawing_file import (
+        from draft_building_designs.services.ai_drawing_component_column_extractor import (
             extract_columns_metadata,
         )
 
@@ -52,41 +52,94 @@ class DraftBuildingDesignManager(models.Manager["DraftBuildingDesign"]):
             building_design_id=building_design_uuid,
             type=DesignDrawingType(design_drawing_type),
         )
-        design_drawing_plan = DesignDrawingPlan.objects.create(
-            design_drawing=design_drawing,
-            type=DesignDrawingPlanType(design_drawing_plan_type),
-            subtype=DesignDrawingPlanSubtype(design_drawing_plan_subtype),
-        )
 
-        if design_drawing_plan.subtype == DesignDrawingPlanSubtype.FOOTING:
+        if (
+            design_drawing_component_metadata_subtype
+            == DesignDrawingComponentMetadataSubtype.FOOTING
+        ):
             for file in files:
                 doc = DesignDrawingDocument.objects.create(
-                    design_drawing_plan=design_drawing_plan,
+                    design_drawing=design_drawing,
                     file=file,
+                    type=DesignDrawingComponentMetadataType(
+                        design_drawing_component_metadata_type
+                    ),
+                    subtype=DesignDrawingComponentMetadataSubtype(
+                        design_drawing_component_metadata_subtype
+                    ),
                 )
                 logger.info(f"Extracting footing metadata for document {doc.uuid}")
-                footing = extract_footing_metadata(
+                footings = extract_footings_metadata(
                     drawing_document_uuid=str(doc.uuid), language_code="pt"
                 )
-                design_drawing_plan.plan_metadata = footing.model_dump()
-                design_drawing_plan.justification = footing.justification
-                design_drawing_plan.save()
-                logger.info(f"Footing metadata: {design_drawing_plan.plan_metadata}")
+                for footing in footings:
+                    design_drawing_component = (
+                        DesignDrawingComponentMetadata.objects.create(
+                            design_drawing=design_drawing,
+                            type=DesignDrawingComponentMetadataType(
+                                design_drawing_component_metadata_type
+                            ),
+                            subtype=DesignDrawingComponentMetadataSubtype(
+                                design_drawing_component_metadata_subtype
+                            ),
+                            data=footing.model_dump(),
+                            justification=footing.justification,
+                        )
+                    )
 
-        elif design_drawing_plan.subtype == DesignDrawingPlanSubtype.COLUMN:
+                    logger.info(f"Footing metadata: {design_drawing_component.data}")
+
+        elif (
+            design_drawing_component_metadata_subtype
+            == DesignDrawingComponentMetadataSubtype.COLUMN
+        ):
             for file in files:
                 doc = DesignDrawingDocument.objects.create(
-                    design_drawing_plan=design_drawing_plan,
+                    design_drawing=design_drawing,
                     file=file,
+                    type=DesignDrawingComponentMetadataType(
+                        design_drawing_component_metadata_type
+                    ),
+                    subtype=DesignDrawingComponentMetadataSubtype(
+                        design_drawing_component_metadata_subtype
+                    ),
                 )
                 logger.info(f"Extracting columns metadata for document {doc.uuid}")
                 columns = extract_columns_metadata(
                     drawing_document_uuid=str(doc.uuid),
                     language_code="pt",
                 )
-                design_drawing_plan.plan_metadata = columns.model_dump()
-                design_drawing_plan.save()
-                logger.info(f"Columns metadata: {design_drawing_plan.plan_metadata}")
+                for column in columns:
+                    design_drawing_component = (
+                        DesignDrawingComponentMetadata.objects.create(
+                            design_drawing=design_drawing,
+                            type=DesignDrawingComponentMetadataType(
+                                design_drawing_component_metadata_type
+                            ),
+                            subtype=DesignDrawingComponentMetadataSubtype(
+                                design_drawing_component_metadata_subtype
+                            ),
+                        )
+                    )
+                    design_drawing_component.data = column.model_dump()
+                    design_drawing_component.save()
+                    logger.info(f"Column metadata: {design_drawing_component.data}")
+
+    def create_design_drawing_cluster(
+        self,
+        *,
+        building_design_uuid: str,
+        design_drawing_plan_uuids: list[str],
+        description: str,
+    ) -> "DesignDrawingCluster":
+        design_drawing_cluster = DesignDrawingCluster.objects.create(
+            building_design_id=building_design_uuid,
+            description=description,
+        )
+        design_drawing_cluster.design_drawing_plans.set(design_drawing_plan_uuids)
+        design_drawing_cluster.save()
+
+        return design_drawing_cluster
 
 
 class DraftBuildingDesignPhase(models.TextChoices):
@@ -173,9 +226,9 @@ class DesignDrawing(BaseModel):
         verbose_name_plural = "Design Drawings"
 
 
-class DesignDrawingPlanType(models.TextChoices):
+class DesignDrawingComponentMetadataType(models.TextChoices):
     """
-    A type of plan of a design drawing.
+    A type of component of a design drawing.
     """
 
     # Structural
@@ -183,9 +236,9 @@ class DesignDrawingPlanType(models.TextChoices):
     FRAMING_PLAN = "FRAMING_PLAN"
 
 
-class DesignDrawingPlanSubtype(models.TextChoices):
+class DesignDrawingComponentMetadataSubtype(models.TextChoices):
     """
-    A subtype of a plan of a design drawing.
+    A subtype of a component of a design drawing.
     """
 
     # Foundation
@@ -197,36 +250,57 @@ class DesignDrawingPlanSubtype(models.TextChoices):
     SLAB = "SLAB"
 
 
-class DesignDrawingPlan(BaseModel):
+class DesignDrawingComponentMetadata(BaseModel):
     """
-    A plan of a design drawing.
+    A metadata of a component of a design drawing.
     """
 
     design_drawing = models.ForeignKey(
         DesignDrawing,
         on_delete=models.CASCADE,
-        related_name="design_drawing_plans",
+        related_name="design_drawing_components_metadata",
     )
     name = models.CharField(max_length=255)
     description = models.TextField(null=True)
-    type = models.CharField(max_length=255, choices=DesignDrawingPlanType.choices)
-    subtype = models.CharField(max_length=255, choices=DesignDrawingPlanSubtype.choices)
-    plan_metadata = models.JSONField(null=True)
-    justification = models.TextField(null=True)
-    documents = models.ManyToManyField(
-        "draft_building_designs.DesignDrawingDocument",
-        related_name="design_drawings",
+    type = models.CharField(
+        max_length=255, choices=DesignDrawingComponentMetadataType.choices
     )
+    subtype = models.CharField(
+        max_length=255, choices=DesignDrawingComponentMetadataSubtype.choices
+    )
+    data = models.JSONField(null=True)
+    justification = models.TextField(null=True)
+
+    """
+    The task ID for the background task that calculates BOM for a single component.
+    """
+
+    task_id = models.CharField(max_length=255, null=True)
+
+    """
+    The calculated BOM for the component.
+    """
+
+    bom = models.JSONField(null=True)
+
+    """
+    Whether the component is locked and cannot be edited.
+    Once is locked, the component is used in a building design and cannot be edited.
+    """
+
+    is_locked = models.BooleanField(default=False)
 
     class Meta:
-        verbose_name = "Design Drawing Plan"
-        verbose_name_plural = "Design Drawing Plans"
+        verbose_name = "Design Drawing Component Metadata"
+        verbose_name_plural = "Design Drawing Component Metadata"
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return f"{self.type} - {self.subtype}"
 
 
 def upload_design_drawing_document(instance, filename):
-    return (
-        f"design_drawing_documents/{str(instance.design_drawing_plan.uuid)}/{filename}"
-    )
+    return f"bucket/design_drawing_documents/{str(instance.design_drawing.uuid)}/{filename}"
 
 
 class DesignDrawingDocument(BaseModel):
@@ -234,9 +308,33 @@ class DesignDrawingDocument(BaseModel):
     A document of a design drawing.
     """
 
-    design_drawing_plan = models.ForeignKey(DesignDrawingPlan, on_delete=models.CASCADE)
+    design_drawing = models.ForeignKey(
+        DesignDrawing, on_delete=models.CASCADE, related_name="documents"
+    )
+    type = models.CharField(
+        max_length=255, choices=DesignDrawingComponentMetadataType.choices
+    )
+    subtype = models.CharField(
+        max_length=255, choices=DesignDrawingComponentMetadataSubtype.choices
+    )
     file = models.FileField(upload_to=upload_design_drawing_document)
 
     class Meta:
         verbose_name = "Design Drawing Document"
         verbose_name_plural = "Design Drawing Documents"
+
+
+class DesignDrawingCluster(BaseModel):
+    """
+    A cluster of design drawings.
+    """
+
+    building_design = models.ForeignKey(DraftBuildingDesign, on_delete=models.CASCADE)
+    description = models.TextField(null=True)
+    design_drawing_components_metadata = models.ManyToManyField(
+        DesignDrawingComponentMetadata, related_name="clusters"
+    )
+
+    class Meta:
+        verbose_name = "Design Drawing Cluster"
+        verbose_name_plural = "Design Drawing Clusters"

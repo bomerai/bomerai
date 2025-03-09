@@ -2,12 +2,12 @@ from django.contrib import admin
 
 from .models import (
     DesignDrawing,
+    DesignDrawingComponentMetadata,
     DesignDrawingDocument,
-    DesignDrawingPlan,
     DraftBuildingDesign,
 )
 
 admin.site.register(DraftBuildingDesign)
 admin.site.register(DesignDrawing)
 admin.site.register(DesignDrawingDocument)
-admin.site.register(DesignDrawingPlan)
+admin.site.register(DesignDrawingComponentMetadata)

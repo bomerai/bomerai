@@ -8,13 +8,6 @@ import { DraftBuildingDesign } from "@/lib/rest-types";
 import Cookies from "js-cookie";
 import { useEffect } from "react";
 import { useParams } from "next/navigation";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 export default function DraftBuildingDesignForm() {
   const { uuid: projectUuid } = useParams();
@@ -40,7 +33,6 @@ export default function DraftBuildingDesignForm() {
         }
       );
       const data = await response.json();
-      console.log(data);
       Cookies.set("csrftoken", data.csrfToken);
     };
 

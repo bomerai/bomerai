@@ -15,9 +15,9 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 # import opentelemetry.instrumentation.django
 # from django.conf import settings
 
+from .celery import *
 from .core import *
 from .cors import *
-from .celery import *
 from .logging import *
 
 # django_stubs_ext.monkeypatch()

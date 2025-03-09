@@ -58,3 +58,10 @@ def langchain_prompt_from_langfuse(
     )
     template.metadata = {"langfuse_prompt": langfuse_prompt}
     return template
+
+
+def langchain_prompt_from_text(*, prompt_text: str):
+    template = ChatPromptTemplate.from_template(
+        prompt_text,
+    )
+    return template

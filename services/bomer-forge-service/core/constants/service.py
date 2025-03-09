@@ -16,7 +16,6 @@ __all__ = (
     "SERVICE_SSL_DIR",
     "SPARK_LOG_FORMAT",
     "SPARK_LOG_LEVEL",
-    "CELERY_BROKER_URL",
 )
 
 ## Spark Vars
@@ -34,7 +33,11 @@ SPARK_LOG_LEVEL = env.str(
         "NOTSET",
     ),
 )
-SPARK_LOG_FORMAT = env.str("SPARK_LOG_FORMAT", "json", validator=lambda level: level.lower() in ("json", "plain"))
+SPARK_LOG_FORMAT = env.str(
+    "SPARK_LOG_FORMAT",
+    "json",
+    validator=lambda level: level.lower() in ("json", "plain"),
+)
 
 ## Service Vars
 
@@ -54,6 +57,8 @@ SERVICE_DATABASE_MIGRATION_URL = env.url(
 )
 
 SERVICE_SSL_DIR = env.path("SERVICE_SSL_DIR", Path("/opt/bimini/ssl"))
-SERVICE_SSL_CA_BUNDLE = env.path("SERVICE_SSL_CA_BUNDLE", Path("/etc/ssl/certs/ca-certificates.crt"))
+SERVICE_SSL_CA_BUNDLE = env.path(
+    "SERVICE_SSL_CA_BUNDLE", Path("/etc/ssl/certs/ca-certificates.crt")
+)
 
 CELERY_BROKER_URL = env.str("CELERY_BROKER_URL", "")
