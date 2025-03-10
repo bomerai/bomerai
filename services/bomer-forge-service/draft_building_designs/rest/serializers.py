@@ -31,6 +31,8 @@ class UploadDrawingDesignSerializer(serializers.Serializer):
     design_drawing_component_metadata_subtype = serializers.ChoiceField(
         choices=DesignDrawingComponentMetadataSubtype.choices,
     )
+    strip_footing_length = serializers.IntegerField(required=False)
+    is_strip_footing = serializers.BooleanField(required=False)
 
 
 class DesignDrawingComponentMetadataSerializer(serializers.ModelSerializer):
@@ -47,3 +49,11 @@ class DesignDrawingSerializer(serializers.ModelSerializer):
     class Meta:
         model = DesignDrawing
         fields = "__all__"
+
+
+class DraftBuildingDesignEvaluationSerializer(serializers.Serializer):
+    building_design_uuid = serializers.UUIDField()
+    files = serializers.ListField(child=serializers.FileField())
+    design_drawing_type = serializers.ChoiceField(
+        choices=DesignDrawingType.choices,
+    )

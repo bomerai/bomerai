@@ -3,6 +3,7 @@
 import {
   ArrowUpRight,
   ChevronRight,
+  InfoIcon,
   PlusIcon,
   SparklesIcon,
 } from "lucide-react";
@@ -27,6 +28,7 @@ import ColumnMetadataFileUploader from "@/components/draft-building-designs/desi
 import ColumnMetadataCardInfo from "@/components/draft-building-designs/design-drawings/column-metadata-card-info";
 import FootingMetadataSidebar from "@/components/draft-building-designs/design-drawings/footing-metadata-sidebar";
 import ColumnMetadataSidebar from "@/components/draft-building-designs/design-drawings/column-metadata-sidebar";
+import DraftBuildingDesignStructuralDrawingUploader from "@/components/draft-building-designs/draft-building-design-structural-drawing-uploader";
 
 const getDesignDrawings = async (
   buildingDesignUuid: string
@@ -153,10 +155,7 @@ export default function DesignDrawingsPage() {
           </Link>
         </nav>
         <div className="flex items-center gap-4">
-          <Button variant="tertiary">
-            <SparklesIcon className="w-4 h-4" />
-            Calcular
-          </Button>
+          <BOMDialog />
           <Link
             className="leading-[54px] font-bold flex items-center gap-2"
             href={`/building-designs/${buildingDesignUuid}/design-drawings`}
@@ -169,9 +168,7 @@ export default function DesignDrawingsPage() {
       <div className="overflow-y-auto flex flex-grow mb-10">
         <div className="p-8 space-y-12 w-full flex flex-col mr-[500px]">
           <div>
-            <h2 className="text-xl font-semibold">
-              Sapatas, Vigas de apoio e Laje de fundação
-            </h2>
+            <h2 className="text-xl font-semibold">Sapatas</h2>
             <p className="text-sm text-muted-foreground">
               Pormenores de fundação são desenhos que mostram as medidas exatas
               para a construções de componentes de um projeto de estrutura.
@@ -184,10 +181,7 @@ export default function DesignDrawingsPage() {
             <div>
               {/* Foundation footing plan */}
               <div className="flex flex-col gap-4 border border-dashed p-8 bg-slate-50">
-                <div className="flex gap-4 justify-between">
-                  <h3 className="text-lg font-medium">
-                    Especificações de sapatas
-                  </h3>
+                <div className="flex gap-4 justify-end">
                   <FootingMetadataFileUploaderDialog />
                 </div>
                 {/* Existing footing plans */}
@@ -208,7 +202,7 @@ export default function DesignDrawingsPage() {
 
           {/* section header */}
           <div>
-            <h2 className="text-xl font-semibold">Colunas, Vigas e Lajes</h2>
+            <h2 className="text-xl font-semibold">Colunas</h2>
             <p className="text-sm text-muted-foreground">
               Pormenores de fundação são desenhos que mostram as medidas exatas
               para a construções de componentes de um projeto de estrutura.
@@ -219,10 +213,7 @@ export default function DesignDrawingsPage() {
             <div className="flex flex-col space-y-12">
               {/* Framing pillar plan */}
               <div className="flex flex-col gap-4 border border-dashed p-8 bg-slate-50">
-                <div className="flex gap-4 justify-between">
-                  <h3 className="font-medium text-lg">
-                    Especificações de colunas
-                  </h3>
+                <div className="flex gap-4 justify-end">
                   <ColumnMetadataFileUploaderDialog />
                 </div>
                 {/* Existing footing plans */}
@@ -266,9 +257,15 @@ export function FootingMetadataFileUploaderDialog() {
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Adicionar um novo projeto</DialogTitle>
+          <DialogTitle>
+            <div className="flex items-center gap-2">
+              <InfoIcon className="w-4 h-4" />
+              <span>Instruções</span>
+            </div>
+          </DialogTitle>
           <DialogDescription>
-            Adicione um novo projeto para começar a trabalhar.
+            Carregue um desenho de sapata para começar a trabalhar. Ao escolher
+            um desenho, o sistema irá identificar as sapatas.
           </DialogDescription>
         </DialogHeader>
         <div className="flex items-center space-x-2">
@@ -307,6 +304,41 @@ export function ColumnMetadataFileUploaderDialog() {
         </DialogHeader>
         <div className="flex items-center space-x-2">
           <ColumnMetadataFileUploader
+            buildingDesignUuid={buildingDesignUuid as string}
+          />
+        </div>
+        <DialogFooter className="sm:justify-start">
+          <DialogClose asChild>
+            <Button type="button" variant="secondary">
+              Fechar
+            </Button>
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function BOMDialog() {
+  const { uuid: buildingDesignUuid } = useParams();
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="default">
+          <SparklesIcon className="w-4 h-4 mr-1" />
+          Rodar Cálculo de Quantidade
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Projeto de Estrutura</DialogTitle>
+          <DialogDescription>
+            Carregue um projeto de estrutura para calcular a quantidade de
+            materiais necessários para a construção.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex items-center space-x-2">
+          <DraftBuildingDesignStructuralDrawingUploader
             buildingDesignUuid={buildingDesignUuid as string}
           />
         </div>

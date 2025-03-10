@@ -66,13 +66,11 @@ def get_extract_footing_metadata_from_design_drawing_document_prompt() -> (
 
 # -
 
-Pisos = Literal["o", "1o", "2o", "3o", "4o", "5o", "6o", "7o", "8o", "9o", "10o"]
-
 
 class PilarBase(BaseModel):
     codigo: str | None = Field(None, description="O codigo do pilar. Exemplo: P1=P2=P3")
-    pisos: list[Pisos] = Field(
-        ..., description="Os pisos que o pilar atinge. Exemplo: [1o, 2o]"
+    pisos: list[str] = Field(
+        ..., description="Os pisos que o pilar atinge. Exemplo: ['Fundacao', 'Piso 1']"
     )
     tipo: Literal["0", "1"] = Field(..., description="O tipo de pilar")
 
@@ -94,7 +92,7 @@ class Pilar(PilarBase):
     comprimento: float = Field(..., description="O comprimento do pilar em centimetros")
     altura: float = Field(
         ...,
-        description="A altura do pilar em centimetros caso exista, se não existir, considere 0",
+        description="A altura do pilar em centimetros caso exista, é a soma dos intervalos da distribuicao dos estribos no arranque e na armadura longitudinal",
     )
     armadura_longitudinal: str = Field(
         ...,
@@ -163,25 +161,12 @@ columns_prompt_text_v2 = """
         Você é um especialista em engenharia civil. Você consegue interpretar plantas estruturais e extrair informações precisas sobre os pilares representados. Seu objetivo é extrair metadados de uma imagem que contém vários pilares.
 
         **Identificação dos Pilares:**
-        - Alguns retângulos podem conter mais de um pilar, sendo identificados por múltiplas letras ou números, por exemplo: P1=P2=P3 significa que o retângulo contém os pilares P1, P2 e P3.
+        - A tabela possui células e o cabeçalho da tabela possui os identificadores dos pilares.
+        - As células são as informações de cada grupo de pilar. Exemplo: P1=P2=P3, P4=P5, P6=P7=P8=P9=P10. Abaixo do cabeçalho pode haver uma ou duas caixas indicando que há configurações diferentes para a coluna dependendo do piso.
+        - Uma célula pode estar divida em duas caixas, cada qual contendo informações de intervalos e estribos diferentes, indicando que há configurações diferentes para a coluna dependendo do piso. Nesse caso, extraia cada caixa separadamente mantendo o mesmo código do grupo de pilares.
+        - Algumas células podem conter mais de um pilar, sendo identificados por múltiplas letras ou números, por exemplo: P1=P2=P3 significa que a célula contém os pilares P1, P2 e P3.
         - Todos os identificadores de pilares devem ser extraídos corretamente e preservados.
-
-        **Extração de Dados das Tabelas:**
-        - Cada pilar pode conter **uma ou mais tabelas de distribuição de estribos**.
-        - **Extraia cada tabela separadamente antes de qualquer unificação de informações.**
-        - Se houver duas tabelas para o mesmo pilar, ambas devem ser **preservadas** no JSON de saída antes de qualquer fusão de dados.
-        - **Exemplo de extração correta**:
-            - Tabela 1: Intervalo: 0-335, Número: 22, Espaçamento: 15
-            - Tabela 2: Intervalo: 0-100, Número: 7, Espaçamento: 15
-            - **Saída JSON correta:**  
-              ```json
-              "distribuicao_estribos": [
-                {{"intervalo": "0-335", "numero": 22, "espacamento": 15}},
-                {{"intervalo": "0-100", "numero": 7, "espacamento": 15}}
-              ]
-              ```
-              ```
-        - Se houver um **arranque separado na tabela**, ele deve ser registrado explicitamente e NÃO mesclado com os intervalos principais.
+        - **Analise cada célula separadamente e extraia os dados de cada pilar.**
 
         **Registro das Armaduras:**
         - A armadura longitudinal sempre deve ser extraída e registrada corretamente.
@@ -189,17 +174,12 @@ columns_prompt_text_v2 = """
         - Caso existam diferentes tipos de distribuição de estribos dentro do mesmo pilar, **todas as distribuições devem ser mantidas no JSON**.
 
         **Como calcular a altura do pilar:**
-        - A altura do pilar é **a soma de todos os intervalos indicados na tabela**.
+        - A altura do pilar é **a soma da diferença entre o maior e o menor valor de todos os intervalos indicados na tabela. Exemplo: se os intervalos são [100-400, 0-100], a altura do pilar é 400cm - 0cm = 400cm, se os intervalos são [0-300], a altura do pilar é 300cm - 0cm = 300cm**.
         - A altura do arranque **não deve ser incluída** no cálculo da altura do pilar principal.
-        - Se houver mais de uma tabela para um mesmo pilar, **soma-se todos os intervalos antes de definir a altura final**.
 
         **Como identificar os pilares IPE:**
         - Se um pilar for do tipo IPE, ele será representado por um retângulo com a descrição "IPE". Exemplo: IPE 200.
         - Para cada pilar IPE encontrado, registre um novo objeto `PilarIPE` com a descrição correta.
-
-        **Pisos do Pilar:**
-        - O piso do pilar deve ser registrado corretamente conforme sua altura.
-        - Exemplo: se o pilar começa na fundação e termina no Piso 1, o piso é `["P0"]`. Se começa na fundação e termina no Piso 2, o piso é `["P0", "P1"]`.
 
         **Vocabulário:**
         - Ø: Diâmetro
@@ -262,4 +242,50 @@ def get_calculate_bom_for_footing_prompt() -> tuple[str, str]:
         Ø8/30 -> 30 unidades de Ø8 espaçadas de acordo com a largura/comprimento da sapata
         """,
         Sapatacdq.__name__,
+    )
+
+
+# -
+
+
+class Bom(BaseModel):
+    pass
+
+
+building_design_building_components_extractor_prompt_text = """
+        Você é um especialista em engenharia civil. Você consegue interpretar plantas estruturais e extrair informações precisas sobre os pilares representados. Seu objetivo é criar um modelo de componente para cada componente que está representado na imagem e retorná-los no formato JSON.
+
+        **Como gerar os componentes:**
+        - Uma imagem de uma planta estrutural contém várias colunas e sapatas. 
+        - Todas as colunas e sapatas que estão representadas na imagem existem no contexto abaixo.
+        - Leia a imagem e use o contexto abaixo para identificar quais componentes estão representados na imagem.
+        - IMPORTANTE: Identifique primeiro os pilares e depois as sapatas.
+        - Após identificar os metadados dos componentes, retorne uma lista com todos os componentes criados para cada tipo que for identificado na imagem a partir do contexto.
+
+        **Escolhendo os pilares:**
+        - As sapatas geralmente possuem uma referência de código que identifica os pilares que estão apoiados nelas. Use essa informação para identificar os pilares.
+        - Metadados de pilares possuem um código com um ou mais identificadores de pilares. Na imagem, haverá uma referência de código para cada pilar. Retorne apenas o código do pilar, não retorne o código da sapata ou referência de código de pilares.
+
+        **Escolhendo as sapatas:**
+        - Cada pilar individual deve ter uma sapata correspondente, a menos que a sapata seja do tipo corrida, onde um único elemento pode suportar múltiplos pilares.
+        - Se houver 4 pilares (P1, P2, P3, P4) e as sapatas forem do tipo isolada, o resultado final deve conter 4 sapatas diferentes, cada uma associada a um pilar diferente.
+        - Se houver 4 pilares e a sapata for do tipo corrida, então apenas uma sapata deve ser criada, e todos os 4 pilares devem ser referenciados como apoiados nela.
+        - As sapatas podem ter diferentes formatos: retangulares, circulares ou irregulares.
+        - As sapatas podem ter uma ou mais vigas de equilíbrio.
+        - As sapatas podem ter um ou mais pilares IPE apoiados nelas.
+        - Use o código do pilar especificado na imagem e a forma geométrica da sapata para identificar qual sapata corresponde ao pilar.
+
+        **Exemplos:**
+        - Se na imagem aparecerem 8 pilares com sapatas isoladas, o JSON deve conter **8 sapatas, cada uma associada a um pilar diferente**.
+        - Se na imagem aparecerem 8 pilares apoiados em uma sapata corrida, o JSON deve conter **apenas 1 sapata corrida**, referenciando os 8 pilares apoiados nela.
+
+        {context}
+        """
+
+
+def get_building_design_building_components_extractor_prompt() -> tuple[str, str]:
+    """Returns the prompt for extracting building design components in Portuguese"""
+    return (
+        building_design_building_components_extractor_prompt_text,
+        Bom.__name__,
     )

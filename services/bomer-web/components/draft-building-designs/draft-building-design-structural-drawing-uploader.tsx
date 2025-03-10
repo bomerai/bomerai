@@ -1,41 +1,35 @@
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import Cookies from "js-cookie";
 import { Trash2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 
-interface FootingPlanFileUploaderProps {
+interface DraftBuildingDesignStructuralDrawingUploaderProps {
   buildingDesignUuid: string;
 }
 
-export default function FootingPlanFileUploader({
+export default function DraftBuildingDesignStructuralDrawingUploader({
   buildingDesignUuid,
-}: FootingPlanFileUploaderProps) {
+}: DraftBuildingDesignStructuralDrawingUploaderProps) {
   const formSchema = z.object({
     files: z.array(z.instanceof(File)),
-    is_strip_footing: z.boolean().default(false),
-    strip_footing_length: z.number().optional(),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       files: [],
-      is_strip_footing: false,
-      strip_footing_length: undefined,
     },
   });
 
   console.log(form.formState.errors);
 
+  const [isLoading, setIsLoading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const fetchCSRFToken = async () => {
@@ -94,19 +88,9 @@ export default function FootingPlanFileUploader({
     });
     formData.append("building_design_uuid", buildingDesignUuid as string);
     formData.append("design_drawing_type", "STRUCTURAL_DRAWING");
-    formData.append(
-      "design_drawing_component_metadata_type",
-      "FOUNDATION_PLAN"
-    );
-    formData.append("design_drawing_component_metadata_subtype", "FOOTING");
-    formData.append("is_strip_footing", data.is_strip_footing.toString());
-    formData.append(
-      "strip_footing_length",
-      data.strip_footing_length?.toString() || ""
-    );
 
     const resp = await fetch(
-      `${process.env.NEXT_PUBLIC_FORGE_SERVICE_API_URL}/api/v1/draft-building-designs/${buildingDesignUuid}/upload-drawing-design/`,
+      `${process.env.NEXT_PUBLIC_FORGE_SERVICE_API_URL}/api/v1/draft-building-designs/${buildingDesignUuid}/evaluation/`,
       {
         method: "POST",
         body: formData,
@@ -138,30 +122,6 @@ export default function FootingPlanFileUploader({
   return (
     <div className="w-full max-w-md">
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="is_strip_footing"
-            checked={form.watch("is_strip_footing")}
-            onCheckedChange={(checked) => {
-              form.setValue("is_strip_footing", checked === true);
-            }}
-          />
-          <Label htmlFor="is_strip_footing">Sapata continua</Label>
-        </div>
-        {form.watch("is_strip_footing") && (
-          <div>
-            <Input
-              id="strip_footing_length"
-              type="number"
-              placeholder="Comprimento da sapata continua"
-              {...form.register("strip_footing_length", {
-                valueAsNumber: true,
-              })}
-            />
-            <Label htmlFor="strip_footing_length">(em metros)</Label>
-          </div>
-        )}
-
         <div>
           <Label htmlFor="projectDescription">Arquivos</Label>
           <div
@@ -227,7 +187,7 @@ export default function FootingPlanFileUploader({
         </div>
 
         <div className="flex justify-end">
-          <Button isLoading={isLoading} type="submit" disabled={isLoading}>
+          <Button type="submit" disabled={isLoading}>
             {isLoading ? "Carregando..." : "Carregar"}
           </Button>
         </div>

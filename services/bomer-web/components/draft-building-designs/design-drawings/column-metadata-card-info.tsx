@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
+import { InfoIcon, Pencil, Trash2 } from "lucide-react";
 import { DesignDrawingComponentMetadata } from "@/lib/rest-types";
 import { useRouter } from "next/navigation";
 
@@ -22,6 +22,7 @@ type ColumnMetadata = {
   longitudinal_rebar: string;
   longitudinal_rebar_stirrups_distribution: ColumnStirrupsDistribution[];
   starter_rebar: string;
+  starter_rebar_height: number;
   starter_rebar_stirrups_distribution: ColumnStarterRebarStirrupsDistribution[];
   stirrup_diameter: string;
   floors: string[];
@@ -78,84 +79,58 @@ export default function ColumnMetadataCardInfo({
           </h4>
         </div>
 
-        {data.type === "0" && (
+        {data.type === "COLUMN" && (
           <div className="flex flex-col space-y-4">
-            <h4 className="text-xs font-bold text-anchor uppercase">
-              Dimensões
-            </h4>
-            <div className="grid grid-cols-4 gap-4 text-xs">
-              <div className="flex flex-col">
-                <div className="font-medium">Largura (cm)</div>
-                <div className="">{data.width}</div>
-              </div>
-              <div className="flex flex-col border-l pl-4">
-                <div className="font-medium">Comprimento (cm)</div>
-                <div className="">{data.length}</div>
-              </div>
-              <div className="flex flex-col border-l pl-4">
-                <div className="font-medium">Altura (cm)</div>
-                <div className="">{data.height}</div>
-              </div>
-              <div className="flex flex-col border-l pl-4">
-                <div className="font-medium">Sapata</div>
-                <div className="italic">--</div>
-              </div>
-            </div>
-            <hr className="w-full border-t border/60" />
-            <div className="flex flex-col space-y-2">
-              <h4 className="text-xs font-bold text-anchor uppercase">
-                Armadura
-              </h4>
-              <div className="grid grid-cols-4 gap-4 text-xs">
-                <div className="flex flex-col">
-                  <div className="font-medium">Diametro</div>
-                  <div className="">{data.longitudinal_rebar}</div>
+            <div className="grid grid-cols-4 gap-4">
+              <div className="flex flex-col text-xs">
+                <div className="flex items-center gap-2">
+                  <h4 className="font-bold">Dimensões</h4>
+                  <InfoIcon className="w-4 h-4" />
                 </div>
-                <div className="flex flex-col border-l pl-4">
-                  <div className="font-medium">Estribos</div>
-                  <div className="">
-                    {data.longitudinal_rebar_stirrups_distribution.map(
-                      (distribution) => (
-                        <div key={distribution.interval}>
-                          {`${distribution.number}${data.stirrup_diameter}//${distribution.spacing}cm`}
-                        </div>
-                      )
-                    )}
-                  </div>
+                <div>
+                  {data.width}x{data.length}x{data.height}cm +{" "}
+                  {data.starter_rebar_height}cm
                 </div>
               </div>
-            </div>
-            <hr className="w-full border-t border/60" />
-            <div className="flex flex-col space-y-2">
-              <h4 className="text-xs font-bold text-anchor uppercase">
-                Arranque
-              </h4>
-              <div className="grid grid-cols-4 gap-4 text-xs">
-                <div className="flex flex-col">
-                  <div className="font-medium">Diametro</div>
-                  <div className="">{data.starter_rebar}</div>
+              <div className="flex flex-col text-xs border-l pl-4">
+                <div className="flex items-center gap-2">
+                  <h4 className="font-bold">Arm. Long.</h4>
                 </div>
-                <div className="flex flex-col border-l pl-4">
-                  <div className="font-medium">Estribos</div>
-                  <div className="">
-                    {data.starter_rebar_stirrups_distribution.map(
-                      (distribution) =>
-                        `${distribution.number}${data.stirrup_diameter}//`
-                    )}
-                  </div>
+                <div>{data.longitudinal_rebar}</div>
+              </div>
+              <div className="flex flex-col text-xs border-l pl-4">
+                <div className="flex items-center gap-2">
+                  <h4 className="font-bold">Arranque</h4>
                 </div>
-                <div className="flex flex-col border-l pl-4">
-                  <div className="font-medium">Altura do arranque (cm)</div>
-                  <div className="italic">
-                    A altura do arranque será definida quando for feita a
-                    leitura da planta
-                  </div>
+                <div>{data.starter_rebar}</div>
+              </div>
+              <div className="flex flex-col text-xs border-l pl-4">
+                <div className="flex items-center gap-2">
+                  <h4 className="font-bold">Estribos</h4>
+                  <InfoIcon className="w-4 h-4" />
+                </div>
+                <div className="flex items-center gap-2">
+                  {data.longitudinal_rebar_stirrups_distribution.map(
+                    (distribution) => (
+                      <div key={distribution.number}>
+                        {`${distribution.number}${data.stirrup_diameter}//`}
+                      </div>
+                    )
+                  )}
+
+                  {data.starter_rebar_stirrups_distribution.map(
+                    (distribution) => (
+                      <div key={distribution.number}>
+                        {`${distribution.number}${data.stirrup_diameter}//`}
+                      </div>
+                    )
+                  )}
                 </div>
               </div>
             </div>
           </div>
         )}
-        {data.type === "1" && (
+        {data.type === "COLUMN_IPE" && (
           <div className="flex flex-col space-y-4">
             <h4 className="text-xs font-bold text-anchor uppercase">
               Dimensões
@@ -171,10 +146,10 @@ export default function ColumnMetadataCardInfo({
       </div>
       <div>
         <Button variant="ghost">
-          <Trash2 className="w-4 h-4 text-anchor" />
+          <Pencil className="w-4 h-4 text-anchor" />
         </Button>
         <Button variant="ghost">
-          <Pencil className="w-4 h-4 text-anchor" />
+          <Trash2 className="w-4 h-4 text-anchor" />
         </Button>
       </div>
     </div>

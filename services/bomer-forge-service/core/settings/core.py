@@ -119,10 +119,9 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "ai",
-    "studies",
     "draft_building_designs",
+    "building_design_evaluations",
     "building_components",
-    "materials",
     "projects",
 ]
 

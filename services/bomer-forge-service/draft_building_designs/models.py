@@ -34,6 +34,8 @@ class DraftBuildingDesignManager(models.Manager["DraftBuildingDesign"]):
         design_drawing_type: str,
         design_drawing_component_metadata_type: str,
         design_drawing_component_metadata_subtype: str,
+        is_strip_footing: bool,
+        strip_footing_length: int | None = None,
     ):
         """
         Upload a drawing design to a draft building design.
@@ -73,6 +75,8 @@ class DraftBuildingDesignManager(models.Manager["DraftBuildingDesign"]):
                     drawing_document_uuid=str(doc.uuid), language_code="pt"
                 )
                 for footing in footings:
+                    if is_strip_footing:
+                        footing.length = strip_footing_length * 100  # m to cm
                     design_drawing_component = (
                         DesignDrawingComponentMetadata.objects.create(
                             design_drawing=design_drawing,
@@ -141,6 +145,21 @@ class DraftBuildingDesignManager(models.Manager["DraftBuildingDesign"]):
 
         return design_drawing_cluster
 
+    def link_building_component_to_building_design(
+        self,
+        *,
+        building_design_uuid: str,
+        building_component_uuid: str,
+        justification: str,
+    ):
+        building_design = DraftBuildingDesign.objects.get(uuid=building_design_uuid)
+        building_component = BuildingComponent.objects.get(uuid=building_component_uuid)
+        DraftBuildingDesignBuildingComponent.objects.create(
+            draft_building_design=building_design,
+            building_component=building_component,
+            justification=justification,
+        )
+
 
 class DraftBuildingDesignPhase(models.TextChoices):
     """
@@ -201,7 +220,6 @@ class DraftBuildingDesignBuildingComponent(BaseModel):
         BuildingComponent, on_delete=models.CASCADE
     )
     justification = models.TextField(default="")
-    quantity = models.IntegerField(default=0)
 
 
 class DesignDrawingType(models.TextChoices):
@@ -260,28 +278,28 @@ class DesignDrawingComponentMetadata(BaseModel):
         on_delete=models.CASCADE,
         related_name="design_drawing_components_metadata",
     )
-    name = models.CharField(max_length=255)
-    description = models.TextField(null=True)
+    name = models.CharField(max_length=255, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
     type = models.CharField(
         max_length=255, choices=DesignDrawingComponentMetadataType.choices
     )
     subtype = models.CharField(
         max_length=255, choices=DesignDrawingComponentMetadataSubtype.choices
     )
-    data = models.JSONField(null=True)
-    justification = models.TextField(null=True)
+    data = models.JSONField(null=True, blank=True)
+    justification = models.TextField(null=True, blank=True)
 
     """
     The task ID for the background task that calculates BOM for a single component.
     """
 
-    task_id = models.CharField(max_length=255, null=True)
+    task_id = models.CharField(max_length=255, null=True, blank=True)
 
     """
     The calculated BOM for the component.
     """
 
-    bom = models.JSONField(null=True)
+    bom = models.JSONField(null=True, blank=True)
 
     """
     Whether the component is locked and cannot be edited.

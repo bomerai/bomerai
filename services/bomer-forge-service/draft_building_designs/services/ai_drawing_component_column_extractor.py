@@ -7,13 +7,15 @@ import structlog
 from django.conf import settings
 from pydantic import BaseModel
 
-from draft_building_designs.models import DesignDrawingDocument
+from draft_building_designs.models import (
+    DesignDrawingComponentMetadata,
+    DesignDrawingComponentMetadataType,
+    DesignDrawingComponentMetadataSubtype,
+    DesignDrawingDocument,
+)
 from draft_building_designs.prompts.pt.prompt import Pilares, Pilar, PilarIPE
 
 logger = structlog.get_logger(__name__)
-
-
-Floor = Literal["o", "1o", "2o", "3o", "4o", "5o", "6o", "7o", "8o", "9o", "10o"]
 
 
 class ColumnStirrupsDistribution(BaseModel):
@@ -28,27 +30,27 @@ class ColumnStarterRebarStirrupsDistribution(BaseModel):
 
 # Base domain model for columns
 class Column(BaseModel):
-    code: str | None
-    width: float | None
-    length: float | None
-    height: float | None
-    longitudinal_rebar: str | None
-    longitudinal_rebar_stirrups_distribution: list[ColumnStirrupsDistribution] | None
-    starter_rebar: str | None
-    starter_rebar_stirrups_distribution: (
-        list[ColumnStarterRebarStirrupsDistribution] | None
-    )
-    stirrup_diameter: str | None
-    floors: list[Floor] | None
-    type: Literal["0", "1"] | None
+    code: str
+    width: float
+    length: float
+    height: float
+    longitudinal_rebar: str
+    longitudinal_rebar_stirrups_distribution: list[ColumnStirrupsDistribution]
+    starter_rebar_height: float | None = None
+    starter_rebar: str | None = None
+    starter_rebar_stirrups_distribution: list[ColumnStarterRebarStirrupsDistribution]
+    stirrup_diameter: str
+    floors: list[str]
+    type: str = "COLUMN"
+    footing_uuid: str | None = None
 
 
 class ColumnIPE(BaseModel):
-    code: str | None
-    description: str | None
-    height: float | None
-    floors: list[Floor] | None
-    type: Literal["0", "1"] | None
+    code: str | None = None
+    description: str | None = None
+    height: float | None = None
+    floors: list[str] | None = None
+    type: str = "COLUMN_IPE"
 
 
 class Columns(BaseModel):
@@ -227,7 +229,7 @@ def extract_columns_metadata(
     # domain_model = ModelMapper.map_to_domain(language_specific_model, Columns)
     # return cast(Columns, domain_model).columns
 
-    columns: list[Column | ColumnIPE] = []
+    columns_grouped_by_code: list[Column | ColumnIPE] = []
 
     for column in language_specific_model.pilares:
         if isinstance(column, Pilar):
@@ -245,7 +247,7 @@ def extract_columns_metadata(
                 )
                 for stirrup in column.arranque_estribos
             ]
-            columns.append(
+            columns_grouped_by_code.append(
                 Column(
                     code=column.codigo,
                     width=column.largura,
@@ -257,19 +259,50 @@ def extract_columns_metadata(
                     starter_rebar_stirrups_distribution=starter_rebar_stirrups_distribution,
                     stirrup_diameter=column.estribo_diametro,
                     floors=column.pisos,
-                    type=column.tipo,
                 )
             )
 
         elif isinstance(column, PilarIPE):
-            columns.append(
+            columns_grouped_by_code.append(
                 ColumnIPE(
                     code=column.codigo,
                     description=column.descricao,
                     height=column.altura,
                     floors=column.pisos,
-                    type=column.tipo,
                 )
             )
 
+    columns: list[Column | ColumnIPE] = []
+    for column in columns_grouped_by_code:
+        codes = column.code.split("=")
+        for code in codes:
+            if isinstance(column, Column):
+                columns.append(
+                    Column(
+                        code=code,
+                        **column.model_dump(exclude={"code"}),
+                    )
+                )
+            elif isinstance(column, ColumnIPE):
+                columns.append(
+                    ColumnIPE(
+                        code=code,
+                        **column.model_dump(exclude={"code"}),
+                    )
+                )
+
+    # extract starter rebar height from footings
+    footings = DesignDrawingComponentMetadata.objects.filter(
+        design_drawing=drawing_document.design_drawing,
+        type=DesignDrawingComponentMetadataType.FOUNDATION_PLAN,
+        subtype=DesignDrawingComponentMetadataSubtype.FOOTING,
+    )
+
+    for column in columns:
+        for footing in footings:
+            if isinstance(column, Column) and column.code in footing.data.get(
+                "references", ""
+            ):
+                column.starter_rebar_height = footing.data.get("height")
+                column.footing_uuid = str(footing.uuid)
     return columns

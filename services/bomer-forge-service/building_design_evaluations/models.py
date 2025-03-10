@@ -1,19 +1,25 @@
 from django.db import models
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.fields import GenericForeignKey
 from core.base_model import BaseModel
+from django.core.files.base import File
+from draft_building_designs.models import DraftBuildingDesign
+
+
+def upload_building_design_evaluation_file(instance, filename):
+    return (
+        f"building_design_evaluations/{instance.draft_building_design.uuid}/{filename}"
+    )
 
 
 class BuildingDesignEvaluation(BaseModel):
-    building_design = models.ForeignKey(
-        "draft_building_designs.DraftBuildingDesign",
+    """
+    A building design evaluation is a evaluation of a building design
+    from a given blueprint uploaded by the user.
+    """
+
+    draft_building_design = models.ForeignKey(
+        DraftBuildingDesign,
         on_delete=models.CASCADE,
-        related_name="building_design_evaluations",
+        related_name="evaluations",
     )
 
-    # Generic Foreign Key fields
-    content_type = models.ForeignKey(
-        ContentType, on_delete=models.CASCADE, null=True, blank=True
-    )
-    object_id = models.UUIDField(null=True, blank=True)
-    content_object = GenericForeignKey("content_type", "object_id")
+    file = models.FileField(upload_to=upload_building_design_evaluation_file)

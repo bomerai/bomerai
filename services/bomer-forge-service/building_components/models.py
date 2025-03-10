@@ -1,39 +1,23 @@
 from django.db import models
 from pgvector.django import VectorField
 
-from core.base_model import UnitOfMeasure, BaseModel, AuditableBaseModel
-from materials.models import Material
+from core.base_model import UnitOfMeasure, BaseModel
 
 
 class BuildingComponentType(models.TextChoices):
+    FOUNDATION = "FOUNDATION"
+    FRAMING = "FRAMING"
+
+
+class BuildingComponentSubtype(models.TextChoices):
+    FOOTING = "FOOTING"
+    COLUMN = "COLUMN"
+    BEAM = "BEAM"
+    SLAB = "SLAB"
     WALL = "WALL"
     FLOOR = "FLOOR"
     CEILING = "CEILING"
     ROOF = "ROOF"
-    DOOR = "DOOR"
-    WINDOW = "WINDOW"
-
-
-class BuildingComponentSubtype(models.TextChoices):
-    EXTERIOR = "EXTERIOR"
-    INTERIOR = "INTERIOR"
-
-
-class BuildingComponentSourceStudy(models.Model):
-    building_component = models.ForeignKey(
-        "building_components.BuildingComponent", on_delete=models.CASCADE
-    )
-    study = models.ForeignKey("studies.Study", on_delete=models.CASCADE)
-
-    class Meta:
-        """Meta options for the BuildingComponentSourceStudy model."""
-
-        unique_together = ("building_component", "study")
-        indexes = (models.Index(fields=["study"], name="study_idx"),)
-
-    def __str__(self):
-        """Return a string representation of the BuildingComponentSourceStudy."""
-        return f"{self.study.name}, {self.building_component}"
 
 
 class BuildingComponentManager(models.Manager["BuildingComponent"]):
@@ -51,25 +35,6 @@ class BuildingComponentManager(models.Manager["BuildingComponent"]):
             unit_of_measure=unit_of_measure,
             type=BuildingComponentType.WALL,
             subtype=BuildingComponentSubtype.EXTERIOR,
-        )
-
-    def link_material_to_building_component(
-        self,
-        building_component_uuid: str,
-        material_uuid: str,
-        quantity: int,
-        unit: UnitOfMeasure,
-        justification: str,
-    ) -> "BuildingComponentMaterial":
-        building_component = BuildingComponent.objects.get(uuid=building_component_uuid)
-        material = Material.objects.get(uuid=material_uuid)
-
-        return BuildingComponentMaterial.objects.update_or_create(
-            building_component=building_component,
-            material=material,
-            quantity=quantity,
-            unit=unit,
-            justification=justification,
         )
 
 
@@ -93,18 +58,6 @@ class BuildingComponent(BaseModel):
     )
     type = models.CharField(max_length=255, choices=BuildingComponentType.choices)
     subtype = models.CharField(max_length=255, choices=BuildingComponentSubtype.choices)
-
-    source_studies = models.ManyToManyField(
-        "studies.Study",
-        through=BuildingComponentSourceStudy,
-        related_name="building_components",
-    )
-
-    materials = models.ManyToManyField(
-        Material,
-        related_name="building_components",
-        through="building_components.BuildingComponentMaterial",
-    )
 
     objects: BuildingComponentManager = BuildingComponentManager()
 
@@ -137,15 +90,3 @@ class BuildingComponent(BaseModel):
                 return area / 1000000, UnitOfMeasure.SQUARE_METERS
             case _:
                 raise ValueError(f"Unsupported unit of measure: {unit}")
-
-
-class BuildingComponentMaterial(BaseModel):
-    """
-    A building component material is a material that is used in a building component.
-    """
-
-    building_component = models.ForeignKey(BuildingComponent, on_delete=models.CASCADE)
-    material = models.ForeignKey(Material, on_delete=models.CASCADE)
-    quantity = models.IntegerField(default=0)
-    unit = models.CharField(max_length=255, choices=UnitOfMeasure.choices)
-    justification = models.TextField(default="")
