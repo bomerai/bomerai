@@ -43,6 +43,8 @@ __all__ = (
     "USE_I18N",
     "USE_TZ",
     "WSGI_APPLICATION",
+    "REST_FRAMEWORK",
+    "SPECTACULAR_SETTINGS",
 )
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -118,6 +120,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "drf_spectacular",
     "ai",
     "draft_building_designs",
     "building_design_evaluations",
@@ -138,6 +141,20 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "core.urls"
+
+REST_FRAMEWORK = {
+    # YOUR SETTINGS
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Bomer Forge Service API",
+    "DESCRIPTION": "API for the Bomer Forge Service",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    # OTHER SETTINGS
+}
+
 
 TEMPLATES = [
     {

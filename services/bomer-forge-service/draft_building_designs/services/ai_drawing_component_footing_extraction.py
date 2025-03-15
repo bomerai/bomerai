@@ -4,7 +4,6 @@ import os
 from typing import Literal, Type, cast
 
 import cv2
-import numpy as np
 import pytesseract
 import structlog
 from PIL import Image

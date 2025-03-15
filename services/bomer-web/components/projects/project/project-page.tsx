@@ -80,9 +80,9 @@ export default function ProjectPage() {
         </nav>
       </div>
       {/* header actions */}
-      {/* <div className="flex items-center justify-end px-8 py-4">
+      <div className="flex items-center justify-end px-8 py-4">
         <AddProjectDialog />
-      </div> */}
+      </div>
 
       <div className="px-8 py-4">
         <h1 className="font-bold mb-4 text-xl">Cálculos</h1>
@@ -108,7 +108,7 @@ export function AddProjectDialog() {
       <DialogTrigger asChild>
         <Button variant="tertiary">
           <PlusIcon className="w-4 h-4 mr-1" />
-          Adicionar nova construção
+          Adicionar novo cálculo
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">

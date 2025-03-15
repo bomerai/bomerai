@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useMemo } from "react";
 
-export default function ReviewSection() {
+export function ReviewSection() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedMaterialEvaluationUuid = searchParams.get(

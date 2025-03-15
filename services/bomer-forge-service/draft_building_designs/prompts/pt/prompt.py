@@ -252,7 +252,7 @@ class Bom(BaseModel):
     pass
 
 
-building_design_building_components_extractor_prompt_text = """
+building_design_building_components_extraction_prompt_text = """
         Você é um especialista em engenharia civil. Você consegue interpretar plantas estruturais e extrair informações precisas sobre os pilares representados. Seu objetivo é criar um modelo de componente para cada componente que está representado na imagem e retorná-los no formato JSON.
 
         **Como gerar os componentes:**
@@ -283,9 +283,9 @@ building_design_building_components_extractor_prompt_text = """
         """
 
 
-def get_building_design_building_components_extractor_prompt() -> tuple[str, str]:
+def get_building_design_building_components_extraction_prompt() -> tuple[str, str]:
     """Returns the prompt for extracting building design components in Portuguese"""
     return (
-        building_design_building_components_extractor_prompt_text,
+        building_design_building_components_extraction_prompt_text,
         Bom.__name__,
     )

@@ -2,13 +2,25 @@
 
 import BuildComponentSidebar from "@/components/draft-building-designs/build-components/build-component-sidebar";
 import { MaterialCostExplorer } from "@/components/materials/material-cost-explorer";
-import { FloorPlanSection } from "@/components/draft-building-designs/build-components/build-component/floor-plan-section";
-import ReviewSection from "@/components/projects/review-section";
+import { ReviewSection } from "@/components/projects/review-section";
 import { Button } from "@/components/ui/button";
-import { ArrowUpRight, ChevronRight, SparklesIcon } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import PillarsSection from "@/components/draft-building-designs/build-components/build-component/pillars-section";
+import { ColumnsSection } from "@/components/draft-building-designs/build-components/build-component/columns-section";
+import Asterisc from "@/components/ui/icons/asterisc";
+import { useQuery } from "@tanstack/react-query";
+import { components } from "@/lib/rest-api.types";
+import { fetcher } from "@/lib/rest-api";
+import { FoundationsSection } from "@/components/draft-building-designs/build-components/build-component/foundations-section";
+
+const TABS = {
+  review: "review",
+  foundations: "foundations",
+  columns: "columns",
+  beams: "beams",
+  slabs: "slabs",
+};
 
 export default function BuildingDesignPage() {
   const { uuid } = useParams();
@@ -19,16 +31,24 @@ export default function BuildingDesignPage() {
     "selectedMaterialEvaluationUuid"
   );
 
+  const { data: draftBuildingDesign } = useQuery({
+    queryKey: ["draftBuildingDesign", uuid],
+    queryFn: () =>
+      fetcher<components["schemas"]["DraftBuildingDesign"]>(
+        `${process.env.NEXT_PUBLIC_FORGE_SERVICE_API_URL}/api/v1/draft-building-designs/${uuid}/`
+      ),
+  });
+
   const renderTabContent = () => {
     switch (tab) {
-      case "review":
-        // Review section
+      case TABS.review:
         return <ReviewSection />;
-      case "pillars":
-        // Draft building design components
-        return <PillarsSection />;
+      case TABS.foundations:
+        return <FoundationsSection />;
+      case TABS.columns:
+        return <ColumnsSection />;
       default:
-        return <FloorPlanSection />;
+        return null;
     }
   };
 
@@ -52,63 +72,93 @@ export default function BuildingDesignPage() {
           </Link>
           <ChevronRight className="w-4 h-4 text-muted-foreground" />
           <Link
-            className="border-b-2 leading-[54px] border-black font-bold"
+            className="leading-[54px] font-bold"
             href={`/building-designs/${uuid}/structure-calculation`}
           >
-            Cálculo de estrutura
+            {draftBuildingDesign?.name}
           </Link>
         </nav>
       </div>
       <div className="flex items-center justify-between px-8 py-4 border-b h-14">
-        <nav className="flex items-center gap-10">
+        <nav className="flex items-center gap-4">
           <Link
-            className={`border-b-2 leading-[54px] ${
-              tab === "review"
-                ? "border-anchor font-bold"
-                : "border-transparent"
+            className={`leading-[54px] flex items-center gap-1 ${
+              tab === "review" ? "font-bold" : ""
             }`}
-            href={`/building-designs/${uuid}?tab=review`}
+            href={`/building-designs/${uuid}?tab=${TABS.review}`}
           >
+            {tab === "review" ? (
+              <Asterisc className="w-4 h-4 text-anchor" />
+            ) : (
+              <div className="w-4 h-4" />
+            )}
             Revisão
           </Link>
           <Link
-            className={`border-b-2 leading-[54px] ${
-              tab === "pillars"
-                ? "border-anchor font-bold"
-                : "border-transparent"
+            className={`leading-[54px] flex items-center gap-1 ${
+              tab === TABS.foundations ? "font-bold" : ""
             }`}
-            href={`/building-designs/${uuid}?tab=pillars`}
+            href={`/building-designs/${uuid}?tab=${TABS.foundations}`}
           >
+            {tab === TABS.foundations ? (
+              <Asterisc className="w-4 h-4 text-anchor" />
+            ) : (
+              <div className="w-4 h-4" />
+            )}
+            Fundação
+          </Link>
+          <Link
+            className={`leading-[54px] flex items-center gap-1 ${
+              tab === TABS.columns ? "font-bold" : ""
+            }`}
+            href={`/building-designs/${uuid}?tab=${TABS.columns}`}
+          >
+            {tab === TABS.columns ? (
+              <Asterisc className="w-4 h-4 text-anchor" />
+            ) : (
+              <div className="w-4 h-4" />
+            )}
             Pilares
           </Link>
           <Link
-            className={`border-b-2 leading-[54px] ${
-              tab === "beams" ? "border-anchor font-bold" : "border-transparent"
+            className={`leading-[54px] flex items-center gap-1 ${
+              tab === TABS.beams ? "font-bold" : ""
             }`}
-            href={`/building-designs/${uuid}?tab=beams`}
+            href={`/building-designs/${uuid}?tab=${TABS.beams}`}
           >
+            {tab === TABS.beams ? (
+              <Asterisc className="w-4 h-4 text-anchor" />
+            ) : (
+              <div className="w-4 h-4" />
+            )}
             Vigas
           </Link>
           <Link
-            className={`border-b-2 leading-[54px] ${
-              tab === "beams" ? "border-anchor font-bold" : "border-transparent"
+            className={`leading-[54px] flex items-center gap-1 ${
+              tab === "slabs" ? "font-bold" : ""
             }`}
-            href={`/building-designs/${uuid}?tab=beams`}
+            href={`/building-designs/${uuid}?tab=slabs`}
           >
+            {tab === "slabs" ? (
+              <Asterisc className="w-4 h-4 text-anchor" />
+            ) : (
+              <div className="w-4 h-4" />
+            )}
             Lajes
           </Link>
         </nav>
         <div className="flex items-center gap-4">
-          <Button variant="tertiary">
-            <SparklesIcon className="w-4 h-4" />
-            Calcular
+          <Button variant="outline">
+            <Asterisc className="w-4 h-4 text-anchor" />
+            Rodar cálculo de quantidade
           </Button>
-          <Link
+
+          {/* <Link
             className="leading-[54px] font-bold flex items-center gap-2"
             href={`/building-designs/${uuid}/design-drawings`}
           >
             Especificações <ArrowUpRight className="w-4 h-4" />
-          </Link>
+          </Link> */}
         </div>
       </div>
 

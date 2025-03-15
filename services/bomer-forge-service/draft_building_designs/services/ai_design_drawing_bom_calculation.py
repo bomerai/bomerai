@@ -143,7 +143,7 @@ def generate_structural_design_evaluation(
 
     drawing_components = list(footings) + list(columns)
 
-    prompt_name = "building_design_building_components_extractor"
+    prompt_name = "building_design_building_components_extraction"
     _, prompt_text = LanguageModelFactory.get_language_model(language_code, prompt_name)
 
     # client = OpenAI(

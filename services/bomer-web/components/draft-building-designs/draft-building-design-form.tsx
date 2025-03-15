@@ -8,15 +8,24 @@ import { DraftBuildingDesign } from "@/lib/rest-types";
 import Cookies from "js-cookie";
 import { useEffect } from "react";
 import { useParams } from "next/navigation";
+import { Input } from "../ui/input";
+import { Label } from "@radix-ui/react-label";
+import { Textarea } from "../ui/textarea";
 
 export default function DraftBuildingDesignForm() {
   const { uuid: projectUuid } = useParams();
 
-  const formSchema = z.object({});
+  const formSchema = z.object({
+    name: z.string().min(1),
+    description: z.string().min(1),
+  });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {},
+    defaultValues: {
+      name: "",
+      description: "",
+    },
   });
 
   console.log(form.formState.errors);
@@ -68,8 +77,8 @@ export default function DraftBuildingDesignForm() {
   return (
     <div className="w-full max-w-md">
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        {/* <div>
-          <Label htmlFor="name">Nome da construção</Label>
+        <div>
+          <Label htmlFor="name">Nome do cálculo</Label>
           <Input type="text" id="name" {...form.register("name")} />
         </div>
 
@@ -77,19 +86,6 @@ export default function DraftBuildingDesignForm() {
           <Label htmlFor="description">Descrição da construção</Label>
           <Textarea id="description" {...form.register("description")} />
         </div>
-
-        <div>
-          <Label htmlFor="kind">Tipo de construção</Label>
-          <Select onValueChange={(value) => form.setValue("kind", value)}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Tipo de construção" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="BUILDING">Edifício</SelectItem>
-              <SelectItem value="HOUSE">Casa</SelectItem>
-            </SelectContent>
-          </Select>
-        </div> */}
 
         <div className="flex justify-end">
           <Button type="submit">Criar construção</Button>
