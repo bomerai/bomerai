@@ -28,28 +28,6 @@ class DraftBuildingDesignManager(models.Manager["DraftBuildingDesign"]):
 
         return draft_building_design
 
-    def upload_drawing_design(
-        self,
-        *,
-        building_design_uuid: str,
-        files: list[File],
-        design_drawing_component_metadata_type: str,
-        design_drawing_component_metadata_subtype: str,
-        is_strip_footing: bool,
-        strip_footing_length: int | None = None,
-    ):
-        """
-        Upload a drawing design to a draft building design.
-        """
-        from draft_building_designs.services.ai_building_component_extraction import (
-            extract_footings_from_drawing_design_document,
-            extract_columns_from_drawing_design_document,
-        )
-
-        logger.info(
-            f"Uploading drawing design for building design {building_design_uuid}"
-        )
-
     def link_building_component_to_building_design(
         self,
         *,
@@ -116,6 +94,25 @@ class DraftBuildingDesign(BaseModel):
     )
 
     objects: DraftBuildingDesignManager = DraftBuildingDesignManager()
+
+
+def get_draft_building_design_drawing_document_upload_path(
+    instance: "DraftBuildingDesignDrawingDocument", filename: str
+) -> str:
+    return f"bucket/draft_building_designs/{instance.draft_building_design.uuid}/drawing_documents/{filename}"
+
+
+class DraftBuildingDesignDrawingDocument(BaseModel):
+    """
+    A drawing document is a document that is part of a building design.
+    """
+
+    draft_building_design = models.ForeignKey(
+        DraftBuildingDesign, on_delete=models.CASCADE
+    )
+    file = models.FileField(
+        upload_to=get_draft_building_design_drawing_document_upload_path
+    )
 
 
 class DraftBuildingDesignBuildingComponent(BaseModel):

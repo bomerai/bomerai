@@ -64,3 +64,15 @@ services:
     hostname: s3.local
     volumes:
       - "s3ninjadata:/home/sirius/data"
+
+  bomer-engine-service:
+    build:
+      context: ./services/bomer-engine-service
+      dockerfile: Dockerfile
+    volumes:
+      - ./services/bomer-engine-service:/app
+    ports:
+      - "8080:8080"
+    environment:
+      - GO_ENV=development
+      - DEBUG=true

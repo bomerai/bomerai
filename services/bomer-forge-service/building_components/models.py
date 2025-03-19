@@ -2,6 +2,9 @@ from django.db import models
 
 from core.base_model import BaseModel
 from treebeard.mp_tree import MP_Node
+import structlog
+
+logger = structlog.get_logger(__name__)
 
 
 class BuildingComponentType(MP_Node):
@@ -14,7 +17,18 @@ class BuildingComponentType(MP_Node):
 
     def __str__(self):
         """Return a string representation of the building component type."""
-        return f"{self.name} - {self.description}"
+        return f"{self.get_parent_names()} {self.name}"
+
+    def get_parent_names(self):
+        """
+        Returns a string with all parent names separated by spaces.
+        For example: "Building Foundation Footing Continuous"
+        """
+        ancestors = self.get_ancestors()
+        parent_names = [ancestor.name for ancestor in ancestors]
+        if parent_names:
+            return " ".join(parent_names)
+        return ""
 
 
 class BuildingComponent(BaseModel):
@@ -23,7 +37,7 @@ class BuildingComponent(BaseModel):
     It can be a wall, floor, ceiling, door, window, etc.
     """
 
-    description = models.TextField(blank=True)
+    description = models.TextField(blank=True, null=True)
     component_data = models.JSONField(
         help_text="The data for the component",
         null=True,
@@ -37,7 +51,7 @@ class BuildingComponent(BaseModel):
 
     def __str__(self):
         """Return a string representation of the building component."""
-        return f"{self.type.name} - {self.description}"
+        return f"{str(self.type)} - {self.description}"
 
 
 class BuildingComponentEvaluation(BaseModel):

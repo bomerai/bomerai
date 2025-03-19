@@ -11,11 +11,10 @@ from django.conf import settings
 from pydantic import BaseModel
 
 from draft_building_designs.models import (
-    DesignDrawingComponentMetadata,
-    DesignDrawingComponentMetadataType,
-    DesignDrawingComponentMetadataSubtype,
-    DesignDrawingDocument,
+    DraftBuildingDesignDrawingDocument,
+    DraftBuildingDesignBuildingComponent,
 )
+from building_components.models import BuildingComponentType
 from draft_building_designs.prompts.pt.prompt import Pilares, Pilar, PilarIPE
 
 logger = structlog.get_logger(__name__)
@@ -183,6 +182,7 @@ def encode_image(image_path):
 
 
 def extract_columns_from_drawing_design_document(
+    *,
     drawing_document_uuid: str,
     language_code: str = "pt",
 ) -> list[Column | ColumnIPE]:
@@ -205,13 +205,12 @@ def extract_columns_from_drawing_design_document(
     language_model_class, prompt_text = LanguageModelFactory.get_language_model(
         language_code, prompt_name
     )
-    logger.info(
-        f"Prompt: {prompt_text}, language_model_class: {language_model_class.model_json_schema()}"
-    )
 
     # -
 
-    drawing_document = DesignDrawingDocument.objects.get(uuid=drawing_document_uuid)
+    drawing_document = DraftBuildingDesignDrawingDocument.objects.get(
+        uuid=drawing_document_uuid
+    )
 
     image_base64 = encode_image(drawing_document.file.path)
 
@@ -313,18 +312,21 @@ def extract_columns_from_drawing_design_document(
                 )
 
     # extract starter rebar height from footings
-    footings = DesignDrawingComponentMetadata.objects.filter(
-        design_drawing=drawing_document.design_drawing,
-        type=DesignDrawingComponentMetadataType.FOUNDATION_PLAN,
-        subtype=DesignDrawingComponentMetadataSubtype.FOOTING,
+    footings = DraftBuildingDesignBuildingComponent.objects.filter(
+        draft_building_design=drawing_document.draft_building_design,
+        building_component__type__name__in=["Isolated", "Continuous"],
     )
 
     for column in columns:
         for footing in footings:
-            if isinstance(column, Column) and column.code in footing.data.get(
+            if isinstance(
+                column, Column
+            ) and column.code in footing.building_component.component_data.get(
                 "references", ""
             ):
-                column.starter_rebar_height = footing.data.get("height")
+                column.starter_rebar_height = (
+                    footing.building_component.component_data.get("height", 0)
+                )
                 column.footing_uuid = str(footing.uuid)
     return columns
 
@@ -390,7 +392,7 @@ def extract_text_from_image(image_path: str, lang: str = "por") -> str:
 
 
 def extract_footings_from_drawing_design_document(
-    drawing_document_uuid: str, language_code: str = "pt"
+    *, drawing_document_uuid: str, language_code: str = "pt"
 ) -> list[Footing]:
     """
     Extract footing metadata from a drawing document
@@ -414,7 +416,9 @@ def extract_footings_from_drawing_design_document(
 
     # -
 
-    drawing_document = DesignDrawingDocument.objects.get(uuid=drawing_document_uuid)
+    drawing_document = DraftBuildingDesignDrawingDocument.objects.get(
+        uuid=drawing_document_uuid
+    )
 
     # Usa OCR para extrair texto antes de chamar GPT-4o
     extracted_text = extract_text_from_image(drawing_document.file.path)
