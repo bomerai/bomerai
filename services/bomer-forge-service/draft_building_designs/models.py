@@ -113,6 +113,7 @@ class DraftBuildingDesignDrawingDocument(BaseModel):
     file = models.FileField(
         upload_to=get_draft_building_design_drawing_document_upload_path
     )
+    description = models.TextField(null=True, blank=True)
 
 
 class DraftBuildingDesignBuildingComponent(BaseModel):

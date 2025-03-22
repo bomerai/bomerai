@@ -45,5 +45,6 @@ urlpatterns = [
     path("api/v1/auth/user/", get_logged_user),
     path("api/v1/", include("projects.rest.urls")),
     path("api/v1/", include("draft_building_designs.rest.urls")),
+    path("api/v1/", include("building_components.rest.urls")),
     path("api/v1/", include("celery_worker.rest.urls")),
 ]

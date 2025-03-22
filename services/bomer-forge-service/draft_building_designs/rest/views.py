@@ -218,3 +218,33 @@ class DraftBuildingDesignViewSet(viewsets.ModelViewSet):
             column_draft_building_design_building_components, many=True
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="measure-project",
+    )
+    def measure_project(self, request, *args, **kwargs):
+        """
+        Measure the project of a draft building design.
+        """
+        serializer = UploadDesignDrawingSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        draft_building_design = DraftBuildingDesign.objects.get(uuid=self.kwargs["pk"])
+        logger.info(
+            "Uploading footing component design drawing",
+            draft_building_design_uuid=draft_building_design.uuid,
+            files=serializer.validated_data["files"],
+        )
+
+        documents = []
+        for file in serializer.validated_data["files"]:
+            draft_building_design_drawing_document = (
+                DraftBuildingDesignDrawingDocument.objects.create(
+                    draft_building_design=draft_building_design,
+                    file=file,
+                )
+            )
+            documents.append(draft_building_design_drawing_document)
+
+        pass

@@ -154,9 +154,7 @@ def convert_file_for_extraction(urn: str):
 
     payload = {
         "input": {"urn": encoded_urn},
-        "output": {
-            "formats": [{"type": "svf", "views": ["2d", "3d"]}, {"type": "obj"}]
-        },
+        "output": {"formats": [{"type": "svf", "views": ["2d"]}, {"type": "obj"}]},
     }
 
     resp = requests.post(
@@ -177,6 +175,7 @@ def extract_dimensions_from_file(urn: str):
     }
 
     encoded_urn = base64.b64encode(urn.encode("utf-8")).decode("utf-8")
+    logger.info("⛏️ Extracting metadata...", encoded_urn=encoded_urn)
 
     resp = requests.get(
         f"https://developer.api.autodesk.com/modelderivative/v2/designdata/{encoded_urn}/metadata",
@@ -213,10 +212,7 @@ def extract_dimensions_from_file(urn: str):
             headers=headers,
         )
 
-        logger.info("Properties extracted", response=resp)
-
         data = resp.json()
-        logger.info("Properties data", data=data)
         with open("properties.json", "w") as f:
             json.dump(data, f)
 
@@ -245,9 +241,12 @@ class Command(BaseCommand):
         token = get_access_token()
         os.environ["AUTODESK_ACCESS_TOKEN"] = token
 
-        file_path = os.path.join(os.path.dirname(__file__), "structure-drawing.dwg")
-        upload_file_to_bucket(file_path=file_path)
+        # file_path = os.path.join(os.path.dirname(__file__), "structure-drawing.dwg")
+        # upload_file_to_bucket(file_path=file_path)
 
         object_id = get_object_id_from_file_on_bucket(file_name="structure-drawing.dwg")
         logger.info("Object ID", object_id=object_id)
         convert_file_for_extraction(urn=object_id)
+        # extract_dimensions_from_file(
+        #     urn="urn:adsk.objects:os.object:beaver-blueprints-bucket/structure-drawing.dwg"
+        # )
