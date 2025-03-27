@@ -117,8 +117,87 @@ class Command(BaseCommand):
             doc=doc,
         )
         msp = doc.modelspace()
-        # extract_beams(msp)
-        for entity in msp.query("POLYLINE"):
-            logger.info(f"Processing entity {entity.dxf.layer}")
-            for vertex in entity.vertices:
-                logger.info(f"Vertex: {vertex}")
+
+        # get continous footing length based on the distance between the pillars
+        for entity in msp.query("TEXT"):
+            if entity.dxf.text[0] == "P":
+                logger.info("Entity", value=entity.dxf.text, position=entity.dxf.insert)
+
+        # Step 1: Extract footings (assuming they are LINE entities)
+        footings = []
+        for entity in msp.query(
+            "LINE[layer=='VIG_FACES']"
+        ):  # You may need to filter by layer, e.g., msp.query('LINE[layer=="FOOTINGS"]')
+            start = Vec2(entity.dxf.start)  # Start point of the line
+            end = Vec2(entity.dxf.end)  # End point of the line
+            length = start.distance(end)  # Calculate the length of the footing
+            footings.append(
+                {
+                    "start": start,
+                    "end": end,
+                    "length": length,
+                    "is_horizontal": abs(start.y - end.y)
+                    < 1e-3,  # Check if the line is horizontal
+                    "is_vertical": abs(start.x - end.x)
+                    < 1e-3,  # Check if the line is vertical
+                }
+            )
+
+        # Step 2: Extract columns (assuming they are INSERT entities with associated TEXT)
+        columns = []
+        for insert in msp.query(
+            "INSERT"
+        ):  # You may need to filter by layer or block name
+            # Get the insertion point of the column
+            position = Vec2(insert.dxf.insert)
+            # Look for nearby TEXT or MTEXT to get the column label (e.g., "P1", "P2")
+            label = "Unknown"
+            for text in msp.query("TEXT MTEXT").filter(
+                lambda e: Vec2(e.dxf.insert).distance(position) < 5
+            ):  # Adjust distance threshold as needed
+                label = text.dxf.text
+                break
+            columns.append({"label": label, "position": position})
+
+        # Step 3: Associate columns with footings
+        footing_column_map = []
+        for footing in footings:
+            supported_columns = []
+            if footing["is_horizontal"]:
+                # For horizontal footings, check if columns are above (same y-coordinate, within x-range)
+                y = footing["start"].y
+                x_min = min(footing["start"].x, footing["end"].x)
+                x_max = max(footing["start"].x, footing["end"].x)
+                for column in columns:
+                    col_x, col_y = column["position"].x, column["position"].y
+                    if (
+                        abs(col_y - y) < 1e-3 and x_min <= col_x <= x_max
+                    ):  # Adjust tolerance as needed
+                        supported_columns.append(column["label"])
+            elif footing["is_vertical"]:
+                # For vertical footings, check if columns are aligned (same x-coordinate, within y-range)
+                x = footing["start"].x
+                y_min = min(footing["start"].y, footing["end"].y)
+                y_max = max(footing["start"].y, footing["end"].y)
+                for column in columns:
+                    col_x, col_y = column["position"].x, column["position"].y
+                    if (
+                        abs(col_x - x) < 1e-3 and y_min <= col_y <= y_max
+                    ):  # Adjust tolerance as needed
+                        supported_columns.append(column["label"])
+
+            footing_column_map.append(
+                {
+                    "footing_length": footing["length"],
+                    "supported_columns": supported_columns,
+                }
+            )
+
+        # Step 4: Output the results
+        for i, footing_info in enumerate(footing_column_map, 1):
+            print(f"Footing {i}:")
+            print(f"  Length: {footing_info['footing_length']:.2f} units")
+            print(
+                f"  Supported Columns: {', '.join(footing_info['supported_columns']) if footing_info['supported_columns'] else 'None'}"
+            )
+            print()

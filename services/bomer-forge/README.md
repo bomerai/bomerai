@@ -34,3 +34,26 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+
+### Adding Autodesk Viewer Scripts
+```
+<link
+rel="stylesheet"
+href="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/style.min.css"
+type="text/css"
+/>
+<Script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/viewer3D.min.js" />
+<div className="flex h-full w-full p-4">
+<div
+    id="forgeViewer"
+    className="overflow-auto"
+    style={{ width: "100%", height: "100%" }}
+/>
+</div>
+<Script
+src="/js/autodesk-viewer.js"
+strategy="lazyOnload"
+type="module"
+/>
+```

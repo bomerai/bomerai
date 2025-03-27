@@ -69,14 +69,18 @@ export function ColumnComponentCard({
 
   const router = useRouter();
 
+  const handleClick = () => {
+    const searchParams = new URLSearchParams(window.location.search);
+    searchParams.set("columnComponentUuid", column.building_component.uuid);
+    router.push(
+      `/building-designs/${buildingDesignUuid}?${searchParams.toString()}`
+    );
+  };
+
   return (
     <div
       className="p-6 bg-white border rounded flex items-start justify-between gap-12"
-      onClick={() => {
-        router.push(
-          `/building-designs/${buildingDesignUuid}/design-drawings?drawingComponentColumnUuid=${column.uuid}`
-        );
-      }}
+      onClick={handleClick}
     >
       <div className="flex flex-col space-y-8 flex-1">
         <div className="flex flex-col gap-4">

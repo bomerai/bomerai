@@ -102,6 +102,15 @@ def get_draft_building_design_drawing_document_upload_path(
     return f"bucket/draft_building_designs/{instance.draft_building_design.uuid}/drawing_documents/{filename}"
 
 
+class DraftBuildingDesignDrawingDocumentType(models.TextChoices):
+    """
+    A type of drawing document.
+    """
+
+    DETAIL = "DETAIL"
+    STRUCTURE = "STRUCTURE"
+
+
 class DraftBuildingDesignDrawingDocument(BaseModel):
     """
     A drawing document is a document that is part of a building design.
@@ -114,6 +123,11 @@ class DraftBuildingDesignDrawingDocument(BaseModel):
         upload_to=get_draft_building_design_drawing_document_upload_path
     )
     description = models.TextField(null=True, blank=True)
+    type = models.CharField(
+        max_length=255,
+        choices=DraftBuildingDesignDrawingDocumentType.choices,
+        default=DraftBuildingDesignDrawingDocumentType.DETAIL,
+    )
 
 
 class DraftBuildingDesignBuildingComponent(BaseModel):

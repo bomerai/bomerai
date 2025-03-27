@@ -36,6 +36,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/building-components/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["v1_building_components_list"];
+        put?: never;
+        post: operations["v1_building_components_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/building-components/{uuid}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["v1_building_components_retrieve"];
+        put: operations["v1_building_components_update"];
+        post?: never;
+        delete: operations["v1_building_components_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["v1_building_components_partial_update"];
+        trace?: never;
+    };
     "/api/v1/celery-task-result/{task_id}/": {
         parameters: {
             query?: never;
@@ -124,6 +156,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/draft-building-designs/{uuid}/measure-project/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Measure the project of a draft building design. */
+        post: operations["v1_draft_building_designs_measure_project_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/draft-building-designs/{uuid}/upload-design-drawing-file/": {
         parameters: {
             query?: never;
@@ -193,6 +242,8 @@ export interface components {
             description?: string | null;
             /** @description The data for the component */
             component_data?: unknown;
+            /** @description The bill of materials for the component */
+            component_bom?: unknown;
             type: number;
         };
         DraftBuildingDesign: {
@@ -223,6 +274,20 @@ export interface components {
             bom?: unknown;
             /** Format: uuid */
             draft_building_design: string;
+        };
+        PatchedBuildingComponent: {
+            /** Format: uuid */
+            readonly uuid?: string;
+            /** Format: date-time */
+            readonly created_at?: string;
+            /** Format: date-time */
+            readonly updated_at?: string;
+            description?: string | null;
+            /** @description The data for the component */
+            component_data?: unknown;
+            /** @description The bill of materials for the component */
+            component_bom?: unknown;
+            type?: number;
         };
         PatchedDraftBuildingDesign: {
             /** Format: uuid */
@@ -331,6 +396,149 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    v1_building_components_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuildingComponent"][];
+                };
+            };
+        };
+    };
+    v1_building_components_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BuildingComponent"];
+                "application/x-www-form-urlencoded": components["schemas"]["BuildingComponent"];
+                "multipart/form-data": components["schemas"]["BuildingComponent"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuildingComponent"];
+                };
+            };
+        };
+    };
+    v1_building_components_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this building component. */
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuildingComponent"];
+                };
+            };
+        };
+    };
+    v1_building_components_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this building component. */
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BuildingComponent"];
+                "application/x-www-form-urlencoded": components["schemas"]["BuildingComponent"];
+                "multipart/form-data": components["schemas"]["BuildingComponent"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuildingComponent"];
+                };
+            };
+        };
+    };
+    v1_building_components_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this building component. */
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    v1_building_components_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this building component. */
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedBuildingComponent"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedBuildingComponent"];
+                "multipart/form-data": components["schemas"]["PatchedBuildingComponent"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuildingComponent"];
+                };
             };
         };
     };
@@ -537,6 +745,34 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DraftBuildingDesignBuildingComponent"];
+                };
+            };
+        };
+    };
+    v1_draft_building_designs_measure_project_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this draft building design. */
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftBuildingDesign"];
+                "application/x-www-form-urlencoded": components["schemas"]["DraftBuildingDesign"];
+                "multipart/form-data": components["schemas"]["DraftBuildingDesign"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftBuildingDesign"];
                 };
             };
         };

@@ -8,6 +8,7 @@ import { z } from "zod";
 import Cookies from "js-cookie";
 import { Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import Script from "next/script";
 
 interface FootingPlanFileUploaderProps {
   buildingDesignUuid: string;

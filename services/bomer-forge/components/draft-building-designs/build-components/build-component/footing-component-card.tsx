@@ -96,14 +96,18 @@ export function FootingComponentCard({
     }
   };
 
+  const handleClick = () => {
+    const searchParams = new URLSearchParams(window.location.search);
+    searchParams.set("footingComponentUuid", footing.building_component.uuid);
+    router.push(
+      `/building-designs/${buildingDesignUuid}?${searchParams.toString()}`
+    );
+  };
+
   return (
     <div
       className="p-6 bg-white border rounded flex items-start justify-between gap-12 hover:cursor-pointer hover:border-anchor"
-      onClick={() => {
-        router.push(
-          `/building-designs/${buildingDesignUuid}/design-drawings?drawingComponentFootingUuid=${footing.uuid}`
-        );
-      }}
+      onClick={handleClick}
     >
       <div className="flex flex-col space-y-8 flex-1">
         <div>

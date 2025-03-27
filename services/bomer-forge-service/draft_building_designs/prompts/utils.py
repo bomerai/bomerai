@@ -82,15 +82,13 @@ class ModelMapper:
             "Sapatas": {
                 "sapatas": "footings",
             },
-            "Sapatacdq": {
-                "uuid": "uuid",
+            "Calculo": {
                 "volume_de_betao_em_metros_cubicos": "concrete_volume_in_cubic_meters",
                 "peso_da_armadura_em_quilogramas": "steel_weight_in_kilograms",
-                "justificacao": "justification",
                 "raciocinio": "rationale",
             },
-            "Sapatacdqs": {
-                "sapatacdqs": "footingboms",
+            "Calculos": {
+                "calculos": "boms",
             },
             # Add more mappings for other languages here
         }

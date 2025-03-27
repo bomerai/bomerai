@@ -43,6 +43,11 @@ class BuildingComponent(BaseModel):
         null=True,
         blank=True,
     )
+    component_bom = models.JSONField(
+        help_text="The bill of materials for the component",
+        null=True,
+        blank=True,
+    )
     type = models.ForeignKey(
         BuildingComponentType,
         on_delete=models.CASCADE,

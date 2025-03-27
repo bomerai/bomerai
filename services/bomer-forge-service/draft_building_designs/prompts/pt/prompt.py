@@ -206,16 +206,12 @@ def get_extract_columns_metadata_from_design_drawing_file_prompt() -> tuple[str,
 # -
 
 
-class Sapatacdq(BaseModel):
-    uuid: str
+class Calculo(BaseModel):
     volume_de_betao_em_metros_cubicos: float = Field(
         ..., description="O volume de betão em metros cúbicos"
     )
     peso_da_armadura_em_quilogramas: float = Field(
         ..., description="O peso da armadura quilogramas"
-    )
-    justificacao: str = Field(
-        ..., description="A justificacao do calculo de quantidade de materiais"
     )
     raciocinio: str = Field(
         ...,
@@ -223,25 +219,28 @@ class Sapatacdq(BaseModel):
     )
 
 
-class Sapatacdqs(BaseModel):
-    sapatacdqs: list[Sapatacdq]
-
-
-def get_calculate_bom_for_footing_prompt() -> tuple[str, str]:
+def get_generate_component_bom_prompt() -> tuple[str, str]:
     """Returns the prompt for calculating the BOM for a footing in Portuguese"""
     return (
         """
-        Você é um especialista em engenharia civil. Seu objetivo é calcular o volume de betão e o peso da armadura de uma sapata. Calcule o volume de betão e o peso da armadura para cada sapata e retorne a sapata com o volume de concreto e o peso da armadura e o uuid da sapata.
+        Você é um especialista em engenharia civil. Seu objetivo é calcular o volume de betão e o peso da armadura de um componente de fundação. Calcule o volume de betão e o peso da armadura para o componente especificado e retorne o componente com o volume de concreto e o peso da armadura. Os componentes de fundação podem ser: sapata, viga de equilíbrio ou pilare IPE.
+
+        **Caso o componente não especifique uma das armaduras, faça o cálculo com as armaduras existentes e ignore a armadura que não está especificada. O importante é sempre calcular o volume de betão e o peso da armadura.**
         
-        *O contexto contem uma sapata no formato JSON*
+        *O contexto contem as medidas de um componente de um projeto de estrutura no formato JSON para calcular o volume de betão e o peso da armadura*
 
         {context}
 
+        **Saida de dados:**
+        - volume_de_betao_em_metros_cubicos: O volume de betão em metros cúbicos, caso não seja possível calcular, retorne 0
+        - peso_da_armadura_em_quilogramas: O peso da armadura em quilogramas, caso não seja possível calcular, retorne 0
+        - raciocinio: O raciocinio para chegar ao calculo de quantidade de materiais
+
         *Dicionario de dados:*
         13Ø12a/13 -> 13Ø12 a 13cm
-        Ø8/30 -> 30 unidades de Ø8 espaçadas de acordo com a largura/comprimento da sapata
+        Ø8/30 -> 30 unidades de Ø8 espaçadas de acordo com a largura/comprimento do componente se especificado.
         """,
-        Sapatacdq.__name__,
+        Calculo.__name__,
     )
 
 
@@ -289,3 +288,10 @@ def get_building_design_building_components_extraction_prompt() -> tuple[str, st
         building_design_building_components_extraction_prompt_text,
         Bom.__name__,
     )
+
+
+# -
+
+
+class Viga(BaseModel):
+    pass

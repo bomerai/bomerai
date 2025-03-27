@@ -1,18 +1,19 @@
 "use client";
 
-import BuildComponentSidebar from "@/components/draft-building-designs/build-components/build-component-sidebar";
-import { MaterialCostExplorer } from "@/components/materials/material-cost-explorer";
-import { ReviewSection } from "@/components/projects/review-section";
+import { ReviewSection } from "@/components/draft-building-designs/review-section";
 import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, CuboidIcon, RulerIcon } from "lucide-react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { ColumnsSection } from "@/components/draft-building-designs/build-components/columns-section";
+import { ColumnsSection } from "@/components/draft-building-designs/columns-section";
 import Asterisc from "@/components/ui/icons/asterisc";
 import { useQuery } from "@tanstack/react-query";
 import { components } from "@/lib/rest-api.types";
-import { fetcher } from "@/lib/rest-api";
-import { FoundationsSection } from "@/components/draft-building-designs/build-components/foundations-section";
+import { fetcher } from "@/lib/api-fetcher";
+import { FoundationsSection } from "@/components/draft-building-designs/foundations-section";
+import { FootingComponentSidebar } from "@/components/draft-building-designs/build-components/build-component/footing-component-sidebar";
+import { cn } from "@/lib/utils";
+import { ColumnComponentSidebar } from "@/components/draft-building-designs/build-components/build-component/column-component-sidebar";
 
 const TABS = {
   review: "review",
@@ -26,10 +27,8 @@ export default function BuildingDesignPage() {
   const { uuid } = useParams();
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab");
-  const buildingComponentUuid = searchParams.get("buildingComponentUuid");
-  const selectedMaterialEvaluationUuid = searchParams.get(
-    "selectedMaterialEvaluationUuid"
-  );
+  const columnComponentUuid = searchParams.get("columnComponentUuid");
+  const footingComponentUuid = searchParams.get("footingComponentUuid");
 
   const { data: draftBuildingDesign } = useQuery({
     queryKey: ["draftBuildingDesign", uuid],
@@ -79,7 +78,24 @@ export default function BuildingDesignPage() {
           </Link>
         </nav>
       </div>
-      <div className="flex items-center justify-between px-8 py-4 border-b h-14">
+      <div className="flex items-center justify-between px-8 py-4 border-b h-14 z-10">
+        <nav className="flex items-center space-x-6">
+          <Link
+            className="leading-[54px] flex items-center gap-1"
+            href={`/building-designs/${uuid}/measurements`}
+          >
+            <RulerIcon className="w-4 h-4 text-anchor" />
+            Medidas
+          </Link>
+          <Link
+            aria-disabled={true}
+            className="leading-[54px] flex items-center gap-1 opacity-30"
+            href={`/building-designs/${uuid}/measurements`}
+          >
+            <CuboidIcon className="w-4 h-4 text-anchor" />
+            Materiais
+          </Link>
+        </nav>
         <nav className="flex items-center space-x-6">
           <Link
             className={`leading-[54px] flex items-center gap-1 ${
@@ -124,6 +140,10 @@ export default function BuildingDesignPage() {
         </nav>
         <div className="flex items-center gap-4">
           <Button variant="outline">
+            <RulerIcon className="w-4 h-4 text-anchor" />
+            Medir projeto de estrutura
+          </Button>
+          <Button variant="outline">
             <Asterisc className="w-4 h-4 text-anchor" />
             Rodar cálculo de quantidade
           </Button>
@@ -139,15 +159,24 @@ export default function BuildingDesignPage() {
 
       <div className="overflow-y-auto flex flex-grow mb-10">
         <div id="tab-container" className="flex w-full">
-          <div className="tab-content flex flex-1 mr-[500px] z-10">
+          <div
+            className={cn(
+              "tab-content flex flex-1 mr-[500px] z-10",
+              tab === TABS.review && "mr-[0px]"
+            )}
+          >
             {renderTabContent()}
           </div>
-          {buildingComponentUuid && (
-            <BuildComponentSidebar
-              designDrawingComponentMetadataUuid={buildingComponentUuid}
+          {columnComponentUuid && (
+            <ColumnComponentSidebar
+              buildingComponentUuid={columnComponentUuid}
             />
           )}
-          {selectedMaterialEvaluationUuid && <MaterialCostExplorer />}
+          {footingComponentUuid && (
+            <FootingComponentSidebar
+              buildingComponentUuid={footingComponentUuid}
+            />
+          )}
         </div>
       </div>
     </div>
