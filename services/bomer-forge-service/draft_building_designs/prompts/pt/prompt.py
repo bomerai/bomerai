@@ -9,20 +9,20 @@ class Sapata(BaseModel):
         description="O comprimento da sapata em centimetros caso exista. Caso não exista, considere que a sapata é um muro de fundação (ou viga de fundação) e adicione 0 ao comprimento da sapata.",
     )
     altura: float = Field(..., description="A altura da sapata em centimetros")
-    armadura_inferior_x: str = Field(
-        ..., description="A armadura inferior da sapata em centimetros"
+    armadura_inferior_x: str | None = Field(
+        None, description="Valores de armadura inferior da sapata. Exemplo: 13Ø12a/13"
     )
-    armadura_inferior_y: str = Field(
-        ..., description="A armadura inferior da sapata em centimetros"
+    armadura_inferior_y: str | None = Field(
+        None, description="Valores de armadura inferior da sapata. Exemplo: 13Ø12a/13"
     )
-    armadura_superior_x: str = Field(
-        ..., description="A armadura superior da sapata em centimetros"
+    armadura_superior_x: str | None = Field(
+        None, description="Valores de armadura superior da sapata. Exemplo: 13Ø12a/13"
     )
-    armadura_superior_y: str = Field(
-        ..., description="A armadura superior da sapata em centimetros"
+    armadura_superior_y: str | None = Field(
+        None, description="Valores de armadura superior da sapata. Exemplo: 13Ø12a/13"
     )
-    referencias: str = Field(
-        ...,
+    referencias: str | None = Field(
+        None,
         description="Os codigos dos pilares que estao apoiados na sapata caso existam. Exemplo: P1=P2=P3",
     )
     tipo: Literal["Sapata Isolada", "Sapata Corrida"] = Field(
@@ -54,9 +54,7 @@ Ao extrair os dados da sapata, considere que:
 Use o seguinte JSON schema para extrair os dados da sapata: {schema}"""
 
 
-def get_extract_footing_metadata_from_design_drawing_document_prompt() -> (
-    tuple[str, str]
-):
+def get_extract_footings_from_design_drawing_document_prompt() -> tuple[str, str]:
     """Returns the prompt for extracting footing metadata in Portuguese"""
     return (
         prompt_text_v2,

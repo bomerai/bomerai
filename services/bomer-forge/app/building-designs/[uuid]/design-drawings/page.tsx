@@ -23,7 +23,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { DesignDrawing } from "@/lib/rest-types";
-import FootingMetadataCardInfo from "@/components/draft-building-designs/design-drawings/footing-metadata-card-info";
+import { FootingComponentCard } from "@/components/draft-building-designs/build-components/build-component/footing-component-card";
 import ColumnMetadataFileUploader from "@/components/draft-building-designs/design-drawings/column-design-drawing-file-uploader";
 import ColumnMetadataCardInfo from "@/components/draft-building-designs/design-drawings/column-metadata-card-info";
 import FootingMetadataSidebar from "@/components/draft-building-designs/build-components/build-component/footing-component-sidebar";
@@ -187,7 +187,7 @@ export default function DesignDrawingsPage() {
                 {/* Existing footing plans */}
                 <div className="flex flex-col gap-4">
                   {footingDesignDrawingPlans?.map((footingPlan) => (
-                    <FootingMetadataCardInfo
+                    <FootingComponentCard
                       key={footingPlan.uuid}
                       footing={footingPlan}
                       buildingDesignUuid={buildingDesignUuid as string}

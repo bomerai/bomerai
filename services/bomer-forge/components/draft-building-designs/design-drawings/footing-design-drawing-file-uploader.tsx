@@ -1,14 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import Cookies from "js-cookie";
 import { Trash2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import Script from "next/script";
 
 interface FootingPlanFileUploaderProps {
   buildingDesignUuid: string;
@@ -19,16 +16,12 @@ export function FootingDesignDrawingFileUploader({
 }: FootingPlanFileUploaderProps) {
   const formSchema = z.object({
     files: z.array(z.instanceof(File)),
-    is_strip_footing: z.boolean().default(false),
-    strip_footing_length: z.number().optional(),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       files: [],
-      is_strip_footing: false,
-      strip_footing_length: undefined,
     },
   });
 
@@ -96,12 +89,6 @@ export function FootingDesignDrawingFileUploader({
     formData.append("draft_building_design_uuid", buildingDesignUuid as string);
     formData.append("type", "FOOTING");
 
-    formData.append("is_strip_footing", data.is_strip_footing.toString());
-    formData.append(
-      "strip_footing_length",
-      data.strip_footing_length?.toString() || ""
-    );
-
     const resp = await fetch(
       `${process.env.NEXT_PUBLIC_FORGE_SERVICE_API_URL}/api/v1/draft-building-designs/${buildingDesignUuid}/upload-design-drawing-file/`,
       {
@@ -133,32 +120,8 @@ export function FootingDesignDrawingFileUploader({
   };
 
   return (
-    <div className="w-full max-w-md">
+    <div className="w-full max-w-md space-y-4">
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="is_strip_footing"
-            checked={form.watch("is_strip_footing")}
-            onCheckedChange={(checked) => {
-              form.setValue("is_strip_footing", checked === true);
-            }}
-          />
-          <Label htmlFor="is_strip_footing">Sapata continua</Label>
-        </div>
-        {form.watch("is_strip_footing") && (
-          <div>
-            <Input
-              id="strip_footing_length"
-              type="number"
-              placeholder="Comprimento da sapata continua"
-              {...form.register("strip_footing_length", {
-                valueAsNumber: true,
-              })}
-            />
-            <Label htmlFor="strip_footing_length">(em metros)</Label>
-          </div>
-        )}
-
         <div>
           <Label htmlFor="projectDescription">Arquivos</Label>
           <div

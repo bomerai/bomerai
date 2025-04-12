@@ -122,6 +122,23 @@ export interface paths {
         patch: operations["v1_draft_building_designs_partial_update"];
         trace?: never;
     };
+    "/api/v1/draft-building-designs/{uuid}/calculation-modules/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Get all calculation modules for a draft building design. */
+        get: operations["v1_draft_building_designs_calculation_modules_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/draft-building-designs/{uuid}/column-components/": {
         parameters: {
             query?: never;
@@ -173,7 +190,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/draft-building-designs/{uuid}/upload-design-drawing-file/": {
+    "/api/v1/draft-building-designs/{uuid}/upload-design-drawing-details-file/": {
         parameters: {
             query?: never;
             header?: never;
@@ -182,8 +199,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Upload a footing component design drawing. */
-        post: operations["v1_draft_building_designs_upload_design_drawing_file_create"];
+        /** @description Handle image files that contain details of the building design. */
+        post: operations["v1_draft_building_designs_upload_design_drawing_details_file_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/draft-building-designs/{uuid}/upload-files/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description ViewSet for DraftBuildingDesign model providing CRUD operations. */
+        post: operations["v1_draft_building_designs_upload_files_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -244,8 +278,16 @@ export interface components {
             component_data?: unknown;
             /** @description The bill of materials for the component */
             component_bom?: unknown;
-            type: number;
+            type: components["schemas"]["BuildingComponentTypeEnum"];
+            floor?: string | null;
         };
+        /**
+         * @description * `FOOTING` - Footing
+         *     * `COLUMN` - Column
+         *     * `BEAM` - Beam
+         * @enum {string}
+         */
+        BuildingComponentTypeEnum: "FOOTING" | "COLUMN" | "BEAM";
         DraftBuildingDesign: {
             /** Format: uuid */
             readonly uuid: string;
@@ -255,8 +297,7 @@ export interface components {
             readonly updated_at: string;
             name: string;
             description?: string | null;
-            phase?: components["schemas"]["PhaseEnum"];
-            status?: components["schemas"]["StatusEnum"];
+            status?: components["schemas"]["DraftBuildingDesignStatusEnum"];
             /** Format: uuid */
             project: string;
             readonly building_components: string[];
@@ -275,6 +316,41 @@ export interface components {
             /** Format: uuid */
             draft_building_design: string;
         };
+        DraftBuildingDesignCalculationModule: {
+            /** Format: uuid */
+            readonly uuid: string;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+            status?: components["schemas"]["DraftBuildingDesignCalculationModuleStatusEnum"];
+            type?: components["schemas"]["DraftBuildingDesignCalculationModuleTypeEnum"];
+            /** Format: uuid */
+            draft_building_design: string;
+        };
+        /**
+         * @description * `NOT_STARTED` - Not Started
+         *     * `IN_PROGRESS` - In Progress
+         *     * `COMPLETED` - Completed
+         * @enum {string}
+         */
+        DraftBuildingDesignCalculationModuleStatusEnum: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
+        /**
+         * @description * `STRUCTURE_PROJECT` - Structure Project
+         * @enum {string}
+         */
+        DraftBuildingDesignCalculationModuleTypeEnum: "STRUCTURE_PROJECT";
+        /**
+         * @description * `NOT_STARTED` - Not Started
+         *     * `CREATING_FOOTING_COMPONENTS` - Creating Footing Components
+         *     * `CREATING_COLUMN_COMPONENTS` - Creating Column Components
+         *     * `CREATING_BEAM_COMPONENTS` - Creating Beam Components
+         *     * `CREATING_SLAB_COMPONENTS` - Creating Slab Components
+         *     * `FINISHED` - Finished
+         *     * `FAILED` - Failed
+         * @enum {string}
+         */
+        DraftBuildingDesignStatusEnum: "NOT_STARTED" | "CREATING_FOOTING_COMPONENTS" | "CREATING_COLUMN_COMPONENTS" | "CREATING_BEAM_COMPONENTS" | "CREATING_SLAB_COMPONENTS" | "FINISHED" | "FAILED";
         PatchedBuildingComponent: {
             /** Format: uuid */
             readonly uuid?: string;
@@ -287,7 +363,8 @@ export interface components {
             component_data?: unknown;
             /** @description The bill of materials for the component */
             component_bom?: unknown;
-            type?: number;
+            type?: components["schemas"]["BuildingComponentTypeEnum"];
+            floor?: string | null;
         };
         PatchedDraftBuildingDesign: {
             /** Format: uuid */
@@ -298,8 +375,7 @@ export interface components {
             readonly updated_at?: string;
             name?: string;
             description?: string | null;
-            phase?: components["schemas"]["PhaseEnum"];
-            status?: components["schemas"]["StatusEnum"];
+            status?: components["schemas"]["DraftBuildingDesignStatusEnum"];
             /** Format: uuid */
             project?: string;
             readonly building_components?: string[];
@@ -315,17 +391,10 @@ export interface components {
             name?: string;
             description?: string;
             reference?: string;
-            type?: components["schemas"]["TypeEnum"];
+            type?: components["schemas"]["ProjectTypeEnum"];
             readonly created_by?: number;
             readonly updated_by?: number;
         };
-        /**
-         * @description * `PHASE_1` - Phase 1
-         *     * `PHASE_2` - Phase 2
-         *     * `PHASE_3` - Phase 3
-         * @enum {string}
-         */
-        PhaseEnum: "PHASE_1" | "PHASE_2" | "PHASE_3";
         /** @description Serializer for Project model. */
         Project: {
             /** Format: uuid */
@@ -337,23 +406,16 @@ export interface components {
             name: string;
             description: string;
             reference: string;
-            type?: components["schemas"]["TypeEnum"];
+            type?: components["schemas"]["ProjectTypeEnum"];
             readonly created_by: number;
             readonly updated_by: number;
         };
-        /**
-         * @description * `DRAFT` - Draft
-         *     * `IN_PROGRESS` - In Progress
-         *     * `COMPLETED` - Completed
-         * @enum {string}
-         */
-        StatusEnum: "DRAFT" | "IN_PROGRESS" | "COMPLETED";
         /**
          * @description * `STRUCTURAL_DESIGN` - Structural Design
          *     * `ARQUITECTURAL_DESIGN` - Arquitectural Design
          * @enum {string}
          */
-        TypeEnum: "STRUCTURAL_DESIGN" | "ARQUITECTURAL_DESIGN";
+        ProjectTypeEnum: "STRUCTURAL_DESIGN" | "ARQUITECTURAL_DESIGN";
     };
     responses: never;
     parameters: never;
@@ -705,6 +767,28 @@ export interface operations {
             };
         };
     };
+    v1_draft_building_designs_calculation_modules_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this draft building design. */
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftBuildingDesignCalculationModule"];
+                };
+            };
+        };
+    };
     v1_draft_building_designs_column_components_retrieve: {
         parameters: {
             query?: never;
@@ -777,7 +861,35 @@ export interface operations {
             };
         };
     };
-    v1_draft_building_designs_upload_design_drawing_file_create: {
+    v1_draft_building_designs_upload_design_drawing_details_file_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this draft building design. */
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftBuildingDesign"];
+                "application/x-www-form-urlencoded": components["schemas"]["DraftBuildingDesign"];
+                "multipart/form-data": components["schemas"]["DraftBuildingDesign"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftBuildingDesign"];
+                };
+            };
+        };
+    };
+    v1_draft_building_designs_upload_files_create: {
         parameters: {
             query?: never;
             header?: never;

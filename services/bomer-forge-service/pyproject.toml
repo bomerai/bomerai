@@ -56,9 +56,10 @@ pdf2image = "^1.17.0"
 django-treebeard = "^4.7.1"
 drf-spectacular = "^0.28.0"
 ezdxf = "^1.4.0"
+scikit-learn = "^1.6.1"
 
 [tool.ruff]
-ignore = ["F401"]
+ignore = [""]
 target-version = "py311"
 line-length = 120
 exclude = [
@@ -88,6 +89,21 @@ exclude = [
 	"node_modules",
 	"venv",
 ]
+
+[tool.ruff.lint]
+# Add specific rules for imports
+select = [
+    "F",    # Pyflakes
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "I",    # isort
+]
+
+# Configure isort rules
+[tool.ruff.lint.isort]
+combine-as-imports = true
+force-single-line = false
+known-first-party = ["core", "apps"]
 
 [tool.ruff.lint.extend-per-file-ignores]
 "__init__.py" = [

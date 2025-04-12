@@ -1,50 +1,15 @@
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowUpRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { DraftBuildingDesign } from "@/lib/rest-types";
 import { formatDate } from "@/lib/utils";
-
-export interface DraftBuildingDesignCardProps {
-  draftBuildingDesign: DraftBuildingDesign;
-}
+import { components } from "@/lib/rest-api.types";
 
 export default function DraftBuildingDesignCard({
   draftBuildingDesign,
-}: DraftBuildingDesignCardProps) {
+}: {
+  draftBuildingDesign: components["schemas"]["DraftBuildingDesign"];
+}) {
   const router = useRouter();
-
-  const getStatus = (status: DraftBuildingDesign["status"]) => {
-    switch (status) {
-      case "DRAFT":
-        return "";
-      case "IN_PROGRESS":
-        return "Em andamento";
-      case "PUBLISHED":
-        return "Publicado";
-    }
-  };
-
-  const getPhase = (phase: DraftBuildingDesign["phase"]) => {
-    switch (phase) {
-      case "PHASE_1":
-        return "Cálculo de estrutura";
-      case "PHASE_2":
-        return "Cálculo de alvenaria";
-      case "PHASE_3":
-        return "Cálculo de telhado";
-    }
-  };
-
-  const getPhaseDescription = (phase: DraftBuildingDesign["phase"]) => {
-    switch (phase) {
-      case "PHASE_1":
-        return "Vigas, pilares, lajes, betões, etc.";
-      case "PHASE_2":
-        return "Muros, pilares, lajes, betões, etc.";
-      case "PHASE_3":
-        return "Telhas, estrutura de madeira, etc.";
-    }
-  };
 
   return (
     <Card
@@ -57,17 +22,14 @@ export default function DraftBuildingDesignCard({
         <CardTitle className="space-y-2">
           <div className="flex justify-between">
             <div>
-              <p className="text-sm font-medium tracking-wide text-anchor">
-                {getStatus(draftBuildingDesign.status)}
-              </p>
-              <h4 className="font-bold text-lg">
-                {getPhase(draftBuildingDesign.phase)}
-              </h4>
+              <h4 className="font-bold text-lg">{draftBuildingDesign.name}</h4>
               <p className="text-sm text-muted-foreground">
-                {getPhaseDescription(draftBuildingDesign.phase)}
+                {draftBuildingDesign.description}
               </p>
             </div>
-            <ArrowUpRight className="w-4 h-4 mr-1" />
+            <div>
+              <ArrowUpRight className="w-5 h-5" />
+            </div>
           </div>
         </CardTitle>
       </CardHeader>

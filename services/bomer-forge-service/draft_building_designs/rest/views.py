@@ -6,15 +6,16 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from building_components.models import BuildingComponent, BuildingComponentType
-from building_components.rest.serializers import BuildingComponentSerializer
 from draft_building_designs.models import (
     DraftBuildingDesign,
     DraftBuildingDesignBuildingComponent,
     DraftBuildingDesignDrawingDocument,
+    DraftBuildingDesignCalculationModule,
 )
 from draft_building_designs.rest.serializers import (
     CreateDraftBuildingDesignSerializer,
     DraftBuildingDesignBuildingComponentSerializer,
+    DraftBuildingDesignCalculationModuleSerializer,
     DraftBuildingDesignSerializer,
     UploadDesignDrawingSerializer,
 )
@@ -52,11 +53,11 @@ class DraftBuildingDesignViewSet(viewsets.ModelViewSet):
     @action(
         detail=True,
         methods=["post"],
-        url_path="upload-design-drawing-file",
+        url_path="upload-design-drawing-details-file",
     )
-    def upload_design_drawing_file(self, request, *args, **kwargs):
+    def upload_design_drawing_details_file(self, request, *args, **kwargs):
         """
-        Upload a footing component design drawing.
+        Handle image files that contain details of the building design.
         """
         from draft_building_designs.services.ai_building_component_extraction import (
             extract_columns_from_drawing_design_document,
@@ -164,35 +165,50 @@ class DraftBuildingDesignViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=True,
+        methods=["post"],
+        url_path="upload-files",
+    )
+    def upload_files(self, request, *args, **kwargs):
+        serializer = UploadDesignDrawingSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        draft_building_design = DraftBuildingDesign.objects.get(
+            uuid=serializer.validated_data["draft_building_design_uuid"]
+        )
+        for file in serializer.validated_data["files"]:
+            DraftBuildingDesignDrawingDocument.objects.create(
+                draft_building_design=draft_building_design,
+                file=file,
+                type=serializer.validated_data["type"],
+            )
+
+        return Response(status=status.HTTP_200_OK)
+
+    @action(
+        detail=True,
         methods=["get"],
-        url_path="foundation-components",
+        url_path="building-components",
         serializer_class=DraftBuildingDesignBuildingComponentSerializer,
     )
-    def list_foundation_components(self, request, *args, **kwargs):
+    def building_components(self, request, *args, **kwargs):
         """
-        Get all foundation components for a draft building design.
+        Get all building components for a draft building design.
+        Filter by component type using the 'type' query parameter.
         """
         draft_building_design = DraftBuildingDesign.objects.get(uuid=self.kwargs["pk"])
 
-        isolated_footing_draft_building_design_building_components = (
-            DraftBuildingDesignBuildingComponent.objects.filter(
-                draft_building_design=draft_building_design,
-                building_component__type__name="Isolated",
-            ).select_related("building_component")
-        )
-        continuous_footing_draft_building_design_building_components = (
-            DraftBuildingDesignBuildingComponent.objects.filter(
-                draft_building_design=draft_building_design,
-                building_component__type__name="Continuous",
-            ).select_related("building_component")
-        )
-        all_components = [
-            *isolated_footing_draft_building_design_building_components,
-            *continuous_footing_draft_building_design_building_components,
-        ]
-        serializer = DraftBuildingDesignBuildingComponentSerializer(
-            all_components, many=True
-        )
+        # Get component type from query parameters
+        component_type = request.query_params.get("type")
+
+        # Base query
+        query = DraftBuildingDesignBuildingComponent.objects.filter(
+            draft_building_design=draft_building_design,
+        ).select_related("building_component")
+
+        # Apply type filter if provided
+        if component_type:
+            query = query.filter(building_component__type=component_type)
+
+        serializer = DraftBuildingDesignBuildingComponentSerializer(query, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(
@@ -219,6 +235,7 @@ class DraftBuildingDesignViewSet(viewsets.ModelViewSet):
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    # TODO: remove
     @action(
         detail=True,
         methods=["post"],
@@ -248,3 +265,23 @@ class DraftBuildingDesignViewSet(viewsets.ModelViewSet):
             documents.append(draft_building_design_drawing_document)
 
         pass
+
+    # TODO: remove
+    @action(
+        detail=True,
+        methods=["get"],
+        url_path="calculation-modules",
+        serializer_class=DraftBuildingDesignCalculationModuleSerializer,
+    )
+    def list_calculation_modules(self, request, *args, **kwargs):
+        """
+        Get all calculation modules for a draft building design.
+        """
+        draft_building_design = DraftBuildingDesign.objects.get(uuid=self.kwargs["pk"])
+        calculation_modules = DraftBuildingDesignCalculationModule.objects.filter(
+            draft_building_design=draft_building_design
+        )
+        serializer = DraftBuildingDesignCalculationModuleSerializer(
+            calculation_modules, many=True
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)

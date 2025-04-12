@@ -1,10 +1,10 @@
 import structlog
-from django.core.files.base import File
 from django.db import models
 
 from building_components.models import BuildingComponent
 from core.base_model import BaseModel
 from projects.models import Project
+from pgvector.django import VectorField
 
 logger = structlog.get_logger(__name__)
 
@@ -33,7 +33,6 @@ class DraftBuildingDesignManager(models.Manager["DraftBuildingDesign"]):
         *,
         building_design_uuid: str,
         building_component_uuid: str,
-        justification: str,
     ):
         """
         Link a building component to a building design.
@@ -43,18 +42,7 @@ class DraftBuildingDesignManager(models.Manager["DraftBuildingDesign"]):
         DraftBuildingDesignBuildingComponent.objects.create(
             draft_building_design=building_design,
             building_component=building_component,
-            justification=justification,
         )
-
-
-class DraftBuildingDesignPhase(models.TextChoices):
-    """
-    A phase of a draft building design.
-    """
-
-    PHASE_1 = "PHASE_1"  # BOM for the structure
-    PHASE_2 = "PHASE_2"
-    PHASE_3 = "PHASE_3"
 
 
 class DraftBuildingDesignStatus(models.TextChoices):
@@ -62,9 +50,13 @@ class DraftBuildingDesignStatus(models.TextChoices):
     A status of a draft building design.
     """
 
-    DRAFT = "DRAFT"
-    IN_PROGRESS = "IN_PROGRESS"
-    COMPLETED = "COMPLETED"
+    NOT_STARTED = "NOT_STARTED"
+    CREATING_FOOTING_COMPONENTS = "CREATING_FOOTING_COMPONENTS"
+    CREATING_COLUMN_COMPONENTS = "CREATING_COLUMN_COMPONENTS"
+    CREATING_BEAM_COMPONENTS = "CREATING_BEAM_COMPONENTS"
+    CREATING_SLAB_COMPONENTS = "CREATING_SLAB_COMPONENTS"
+    FINISHED = "FINISHED"
+    FAILED = "FAILED"
 
 
 class DraftBuildingDesign(BaseModel):
@@ -77,15 +69,10 @@ class DraftBuildingDesign(BaseModel):
     project = models.ForeignKey(
         Project, on_delete=models.CASCADE, related_name="draft_building_designs"
     )
-    phase = models.CharField(
-        max_length=255,
-        choices=DraftBuildingDesignPhase.choices,
-        default=DraftBuildingDesignPhase.PHASE_1,
-    )
     status = models.CharField(
         max_length=255,
         choices=DraftBuildingDesignStatus.choices,
-        default=DraftBuildingDesignStatus.DRAFT,
+        default=DraftBuildingDesignStatus.CREATING_FOOTING_COMPONENTS,
     )
     building_components = models.ManyToManyField(
         BuildingComponent,
@@ -95,6 +82,9 @@ class DraftBuildingDesign(BaseModel):
 
     objects: DraftBuildingDesignManager = DraftBuildingDesignManager()
 
+    def __str__(self):
+        return f"{self.name} - {self.project.name}"
+
 
 def get_draft_building_design_drawing_document_upload_path(
     instance: "DraftBuildingDesignDrawingDocument", filename: str
@@ -102,13 +92,55 @@ def get_draft_building_design_drawing_document_upload_path(
     return f"bucket/draft_building_designs/{instance.draft_building_design.uuid}/drawing_documents/{filename}"
 
 
+class DraftBuildingDesignCalculationModuleType(models.TextChoices):
+    """
+    A type of draft building design calculation module.
+    """
+
+    STRUCTURE_PROJECT = "STRUCTURE_PROJECT"
+
+
+class DraftBuildingDesignCalculationModuleStatus(models.TextChoices):
+    """
+    A status of a draft building design calculation module.
+    """
+
+    NOT_STARTED = "NOT_STARTED"
+    IN_PROGRESS = "IN_PROGRESS"
+    COMPLETED = "COMPLETED"
+
+
+class DraftBuildingDesignCalculationModule(BaseModel):
+    """
+    A draft building design calculation module is a module for a building design.
+    """
+
+    draft_building_design = models.ForeignKey(
+        DraftBuildingDesign,
+        on_delete=models.CASCADE,
+        related_name="calculation_modules",
+    )
+    status = models.CharField(
+        max_length=255,
+        choices=DraftBuildingDesignCalculationModuleStatus.choices,
+        default=DraftBuildingDesignCalculationModuleStatus.NOT_STARTED,
+    )
+    type = models.CharField(
+        max_length=255,
+        choices=DraftBuildingDesignCalculationModuleType.choices,
+        default=DraftBuildingDesignCalculationModuleType.STRUCTURE_PROJECT,
+    )
+
+
 class DraftBuildingDesignDrawingDocumentType(models.TextChoices):
     """
     A type of drawing document.
     """
 
-    DETAIL = "DETAIL"
-    STRUCTURE = "STRUCTURE"
+    FOOTING = "FOOTING"
+    COLUMN = "COLUMN"
+    BEAM = "BEAM"
+    SLAB = "SLAB"
 
 
 class DraftBuildingDesignDrawingDocument(BaseModel):
@@ -126,7 +158,7 @@ class DraftBuildingDesignDrawingDocument(BaseModel):
     type = models.CharField(
         max_length=255,
         choices=DraftBuildingDesignDrawingDocumentType.choices,
-        default=DraftBuildingDesignDrawingDocumentType.DETAIL,
+        default=DraftBuildingDesignDrawingDocumentType.FOOTING,
     )
 
 
@@ -141,6 +173,30 @@ class DraftBuildingDesignBuildingComponent(BaseModel):
     building_component = models.OneToOneField(
         BuildingComponent, on_delete=models.CASCADE
     )
-    justification = models.TextField(default="")
-    task_id = models.CharField(max_length=255, null=True, blank=True)
-    bom = models.JSONField(null=True, blank=True)
+
+
+class DXFEntity(BaseModel):
+    """
+    A DXF entity is an entity in a DXF file.
+    """
+
+    draft_building_design = models.ForeignKey(
+        DraftBuildingDesign, on_delete=models.CASCADE, related_name="dxf_entities"
+    )
+    metadata = models.JSONField(
+        help_text="Metadata of the entity in the DXF file",
+        null=True,
+        blank=True,
+    )
+    embedding = VectorField(dimensions=1536, null=True, blank=True)
+    tags = models.JSONField(
+        help_text="Array of tags of the element in the DXF file", null=True, blank=True
+    )
+
+    class Meta:
+        verbose_name = "DXF Entity"
+        verbose_name_plural = "DXF Entities"
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return f"{self.draft_building_design.name} - {self.metadata}"

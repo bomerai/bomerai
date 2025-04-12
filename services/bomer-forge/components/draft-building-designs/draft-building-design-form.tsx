@@ -70,7 +70,7 @@ export default function DraftBuildingDesignForm() {
     if (response.ok) {
       const draftBuildingDesign =
         (await response.json()) as DraftBuildingDesign;
-      window.location.href = `/building-designs/${draftBuildingDesign.uuid}`;
+      window.location.href = `/buildings/${draftBuildingDesign.uuid}/measure`;
     }
   };
 
@@ -78,7 +78,7 @@ export default function DraftBuildingDesignForm() {
     <div className="w-full max-w-md">
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <Label htmlFor="name">Nome do cálculo</Label>
+          <Label htmlFor="name">Nome da construção</Label>
           <Input type="text" id="name" {...form.register("name")} />
         </div>
 

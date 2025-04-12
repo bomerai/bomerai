@@ -14,17 +14,37 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-import { DraftBuildingDesign, Project } from "@/lib/rest-types";
-import useSWR from "swr";
 import DraftBuildingDesignCard from "@/components/draft-building-designs/draft-building-design-card";
 import { useParams } from "next/navigation";
 import DraftBuildingDesignForm from "@/components/draft-building-designs/draft-building-design-form";
+import { useQuery } from "@tanstack/react-query";
+import { components } from "@/lib/rest-api.types";
 
-const fetcher = <T,>(url: string) =>
-  fetch(url, {
-    credentials: "include",
-    mode: "cors",
-  }).then((res) => res.json() as Promise<T>);
+const getProject = async (
+  projectUuid: string
+): Promise<components["schemas"]["Project"]> => {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_FORGE_SERVICE_API_URL}/api/v1/projects/${projectUuid}/`,
+    {
+      credentials: "include",
+      mode: "cors",
+    }
+  );
+  return res.json();
+};
+
+const getDraftBuildingDesigns = async (
+  projectUuid: string
+): Promise<components["schemas"]["DraftBuildingDesign"][]> => {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_FORGE_SERVICE_API_URL}/api/v1/draft-building-designs/?project_uuid=${projectUuid}`,
+    {
+      credentials: "include",
+      mode: "cors",
+    }
+  );
+  return res.json();
+};
 
 export default function ProjectPage() {
   const { uuid: projectUuid } = useParams();
@@ -33,19 +53,19 @@ export default function ProjectPage() {
     data: project,
     isLoading: isProjectLoading,
     error: projectError,
-  } = useSWR<Project>(
-    `${process.env.NEXT_PUBLIC_FORGE_SERVICE_API_URL}/api/v1/projects/${projectUuid}/`,
-    fetcher
-  );
+  } = useQuery({
+    queryKey: ["project", projectUuid],
+    queryFn: () => getProject(projectUuid as string),
+  });
 
   const {
     data: draftBuildingDesigns,
     isLoading: isDraftBuildingDesignsLoading,
     error: draftBuildingDesignsError,
-  } = useSWR<DraftBuildingDesign[]>(
-    `${process.env.NEXT_PUBLIC_FORGE_SERVICE_API_URL}/api/v1/draft-building-designs/?project_uuid=${projectUuid}`,
-    fetcher
-  );
+  } = useQuery({
+    queryKey: ["draftBuildingDesigns", projectUuid],
+    queryFn: () => getDraftBuildingDesigns(projectUuid as string),
+  });
 
   if (isProjectLoading || isDraftBuildingDesignsLoading) {
     return <div>Loading...</div>;
@@ -81,13 +101,14 @@ export default function ProjectPage() {
       </div>
       {/* header actions */}
       <div className="flex items-center justify-end px-8 py-4">
-        <AddProjectDialog />
+        <AddNewDraftBuildingDesignDialog />
       </div>
 
       <div className="px-8 py-4">
-        <h1 className="font-bold mb-4 text-xl">Cálculos</h1>
+        <h1 className="font-bold mb-4 text-xl">Construções</h1>
         <p className="text-sm text-muted-foreground mb-4">
-          Cada módulo tem um cálculo próprio.
+          Cada construção possui um conjunto de módulos de cálculo. Como cálculo
+          de estrutura, piso, telhado, etc.
         </p>
         <div className="grid grid-cols-3 gap-4">
           {draftBuildingDesigns?.map((draftBuildingDesign) => (
@@ -102,20 +123,21 @@ export default function ProjectPage() {
   );
 }
 
-export function AddProjectDialog() {
+export function AddNewDraftBuildingDesignDialog() {
   return (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="tertiary">
           <PlusIcon className="w-4 h-4 mr-1" />
-          Adicionar novo cálculo
+          Adicionar construção
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Adicionar uma construção</DialogTitle>
           <DialogDescription>
-            Adicione uma nova construção para começar a trabalhar.
+            A construção é o que você quer construir. Ela pode ser um edifício,
+            uma casa, um galpão, etc.
           </DialogDescription>
         </DialogHeader>
         <div className="flex items-center space-x-2">

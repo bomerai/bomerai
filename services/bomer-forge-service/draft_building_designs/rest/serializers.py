@@ -2,6 +2,7 @@ from rest_framework import serializers
 from draft_building_designs.models import (
     DraftBuildingDesign,
     DraftBuildingDesignBuildingComponent,
+    DraftBuildingDesignCalculationModule,
 )
 from building_components.rest.serializers import BuildingComponentSerializer
 
@@ -22,8 +23,6 @@ class UploadDesignDrawingSerializer(serializers.Serializer):
     draft_building_design_uuid = serializers.UUIDField()
     files = serializers.ListField(child=serializers.FileField())
     type = serializers.ChoiceField(choices=["FOOTING", "COLUMN", "BEAM", "SLAB"])
-    is_strip_footing = serializers.BooleanField(required=False)
-    strip_footing_length = serializers.FloatField(required=False)
 
 
 class DraftBuildingDesignBuildingComponentSerializer(serializers.ModelSerializer):
@@ -31,4 +30,10 @@ class DraftBuildingDesignBuildingComponentSerializer(serializers.ModelSerializer
 
     class Meta:
         model = DraftBuildingDesignBuildingComponent
+        fields = "__all__"
+
+
+class DraftBuildingDesignCalculationModuleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DraftBuildingDesignCalculationModule
         fields = "__all__"

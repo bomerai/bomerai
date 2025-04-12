@@ -7,28 +7,14 @@ import structlog
 logger = structlog.get_logger(__name__)
 
 
-class BuildingComponentType(MP_Node):
+class BuildingComponentType(models.TextChoices):
     """
     A building component type is a type of building component.
     """
 
-    name = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True)
-
-    def __str__(self):
-        """Return a string representation of the building component type."""
-        return f"{self.get_parent_names()} {self.name}"
-
-    def get_parent_names(self):
-        """
-        Returns a string with all parent names separated by spaces.
-        For example: "Building Foundation Footing Continuous"
-        """
-        ancestors = self.get_ancestors()
-        parent_names = [ancestor.name for ancestor in ancestors]
-        if parent_names:
-            return " ".join(parent_names)
-        return ""
+    FOOTING = "FOOTING"
+    COLUMN = "COLUMN"
+    BEAM = "BEAM"
 
 
 class BuildingComponent(BaseModel):
@@ -43,16 +29,8 @@ class BuildingComponent(BaseModel):
         null=True,
         blank=True,
     )
-    component_bom = models.JSONField(
-        help_text="The bill of materials for the component",
-        null=True,
-        blank=True,
-    )
-    type = models.ForeignKey(
-        BuildingComponentType,
-        on_delete=models.CASCADE,
-        related_name="building_components",
-    )
+    type = models.CharField(max_length=255, choices=BuildingComponentType.choices)
+    floor = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         """Return a string representation of the building component."""

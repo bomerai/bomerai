@@ -2,7 +2,7 @@
 // import type { Metadata } from "next";
 import "./globals.css";
 import Link from "next/link";
-import { Building } from "lucide-react";
+import { Folder } from "lucide-react";
 import localFont from "next/font/local";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { cn } from "@/lib/utils";
@@ -10,6 +10,8 @@ import { usePathname } from "next/navigation";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"; // Optional but recommended for development
 import { AuthProvider } from "@/hooks/auth";
+import { NotificationProvider } from "@/hooks/notification-context";
+import NotificationContainer from "@/components/ui/notification-container";
 
 const nbInternationalPro = localFont({
   src: [
@@ -53,36 +55,39 @@ export default function RootLayout({
             clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}
           >
             <AuthProvider>
-              <div
-                className={cn(
-                  "pl-[200px] h-full",
-                  pathname === "/login" && "pl-0"
-                )}
-              >
+              <NotificationProvider>
                 <div
-                  id="sidebar"
                   className={cn(
-                    "fixed bg-surface-2 top-0 left-0 h-full w-[200px] border-r shadow-md",
-                    pathname === "/login" && "hidden"
+                    "pl-[200px] h-full",
+                    pathname === "/login" && "pl-0"
                   )}
                 >
-                  <div className="">
-                    <ul className="py-6">
-                      <li className="">
-                        <Link
-                          href="/"
-                          className="flex items-center gap-2 text-md p-4 hover:bg-anchor/20 font-bold "
-                        >
-                          <Building className="w-5 h-5 mr-2" />
-                          Projetos
-                        </Link>
-                      </li>
-                    </ul>
+                  <div
+                    id="sidebar"
+                    className={cn(
+                      "fixed bg-surface-2 top-0 left-0 h-full w-[200px] border-r shadow-md",
+                      pathname === "/login" && "hidden"
+                    )}
+                  >
+                    <div className="">
+                      <ul className="py-6">
+                        <li className="">
+                          <Link
+                            href="/"
+                            className="flex items-center gap-2 text-md p-4 hover:bg-anchor/20 font-bold "
+                          >
+                            <Folder className="w-5 h-5 mr-2" />
+                            Projetos
+                          </Link>
+                        </li>
+                      </ul>
+                    </div>
                   </div>
-                </div>
 
-                <div className="h-full">{children}</div>
-              </div>
+                  <div className="h-full">{children}</div>
+                </div>
+                <NotificationContainer />
+              </NotificationProvider>
             </AuthProvider>
           </GoogleOAuthProvider>
           {process.env.NODE_ENV === "development" && <ReactQueryDevtools />}
