@@ -22,7 +22,7 @@ export function BeamComponentCard({
     beam.building_component.component_data
   );
   return (
-    <div className="p-4 border rounded space-y-2">
+    <div className="p-6 border rounded space-y-2">
       <div className="flex flex-col">
         <span className="text-xs text-muted-foreground">Viga</span>
         <h4 className="font-bold">C.2.1</h4>

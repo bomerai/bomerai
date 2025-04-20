@@ -98,7 +98,11 @@ export default function BuildingDesignPage() {
   const renderTabContent = () => {
     switch (tab) {
       case TABS.bom:
-        return <DraftBuildingDesignBomSection />;
+        return (
+          <DraftBuildingDesignBomSection
+            draftBuildingDesignId={uuid as string}
+          />
+        );
       case TABS.foundations:
         return (
           <DraftBuildingDesignFootings buildingDesignUuid={uuid as string} />

@@ -37,3 +37,17 @@ class DraftBuildingDesignCalculationModuleSerializer(serializers.ModelSerializer
     class Meta:
         model = DraftBuildingDesignCalculationModule
         fields = "__all__"
+
+
+class DraftBuildingDesignBomItemSerializer(serializers.Serializer):
+    id = serializers.UUIDField()
+    steel_weight = serializers.FloatField()
+    concrete_volume = serializers.FloatField()
+    quantity = serializers.IntegerField()
+
+
+class DraftBuildingDesignBomSerializer(serializers.Serializer):
+    footings = DraftBuildingDesignBomItemSerializer(many=True)
+    columns = DraftBuildingDesignBomItemSerializer(many=True)
+    beams = DraftBuildingDesignBomItemSerializer(many=True)
+    slabs = DraftBuildingDesignBomItemSerializer(many=True)

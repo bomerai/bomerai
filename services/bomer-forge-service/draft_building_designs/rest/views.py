@@ -1,25 +1,27 @@
 import structlog
-from rest_framework import status, viewsets
-from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-
 from building_components.models import BuildingComponent, BuildingComponentType
+from django.core.cache import cache
+from django.db.models import F
 from draft_building_designs.models import (
     DraftBuildingDesign,
     DraftBuildingDesignBuildingComponent,
-    DraftBuildingDesignDrawingDocument,
     DraftBuildingDesignCalculationModule,
+    DraftBuildingDesignDrawingDocument,
 )
 from draft_building_designs.rest.serializers import (
     CreateDraftBuildingDesignSerializer,
+    DraftBuildingDesignBomSerializer,
     DraftBuildingDesignBuildingComponentSerializer,
     DraftBuildingDesignCalculationModuleSerializer,
     DraftBuildingDesignSerializer,
     UploadDesignDrawingSerializer,
 )
 from projects.models import Project
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 logger = structlog.get_logger(__name__)
 
@@ -285,4 +287,62 @@ class DraftBuildingDesignViewSet(viewsets.ModelViewSet):
         serializer = DraftBuildingDesignCalculationModuleSerializer(
             calculation_modules, many=True
         )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(
+        detail=True,
+        methods=["get"],
+        url_path="bom",
+        serializer_class=DraftBuildingDesignBomSerializer,
+    )
+    def building_components_bom(self, request, *args, **kwargs):
+        """
+        Get the bill of materials for a draft building design.
+        """
+        draft_building_design = DraftBuildingDesign.objects.get(uuid=self.kwargs["pk"])
+
+        # Try to get from cache first
+        cache_key = f"bom_{draft_building_design.uuid}"
+        cached_bom = cache.get(cache_key)
+        if cached_bom:
+            serializer = self.get_serializer(cached_bom)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        # Optimize query to get all components in a single query with their BOM data
+        components = draft_building_design.building_components.annotate(
+            component_type=F("type"),
+            steel_weight=F("component_data__bom__steel_weight"),
+            concrete_volume=F("component_data__bom__concrete_volume"),
+        ).values(
+            "component_type",
+            "uuid",
+            "steel_weight",
+            "concrete_volume",
+            "component_data",
+        )
+
+        # Process components by type
+        bom = {"footings": [], "columns": [], "beams": [], "slabs": []}
+
+        for component in components:
+            if not component["steel_weight"] or not component["concrete_volume"]:
+                continue
+
+            item = {
+                "id": str(component["uuid"]),
+                "steel_weight": float(component["steel_weight"]),
+                "concrete_volume": float(component["concrete_volume"]),
+                "quantity": 1,
+            }
+
+            # Special handling for columns to count 'P' occurrences
+            if component["component_type"] == BuildingComponentType.COLUMN:
+                item["quantity"] = str(component["component_data"]).count("P")
+
+            bom[component["component_type"].lower() + "s"].append(item)
+
+        # Cache the result for 5 minutes
+        cache.set(cache_key, bom, 300)
+
+        serializer = self.get_serializer(bom)
         return Response(serializer.data, status=status.HTTP_200_OK)

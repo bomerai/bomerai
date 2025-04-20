@@ -6,38 +6,21 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { components } from "@/lib/rest-api.types";
 import { fetcher } from "@/lib/api-fetcher";
 import z from "zod";
+import { Separator } from "@/components/ui/separator";
 
 const componentDataSchema = z.object({
   code: z.string(),
   type: z.string(),
-  width: z.number().nullable(),
-  floors: z.array(z.string()),
-  height: z.number().nullable(),
-  length: z.number().nullable(),
-  footing_uuid: z.string().nullable(),
-  starter_rebar: z.string().nullable(),
-  stirrup_diameter: z.string().nullable(),
-  longitudinal_rebar: z.string().nullable(),
-  starter_rebar_height: z.number().nullable(),
-  starter_rebar_stirrups_distribution: z.array(
-    z.object({
-      number: z.number(),
-    })
-  ),
-  longitudinal_rebar_stirrups_distribution: z.array(
-    z.object({
-      number: z.number(),
-      spacing: z.number(),
-      interval: z.string(),
-    })
-  ),
-  description: z.string().optional(),
-});
-
-const bomSchema = z.object({
-  concrete_volume_in_cubic_meters: z.number().optional(),
-  steel_weight_in_kilograms: z.number().optional(),
-  rationale: z.string().optional(),
+  width: z.number().optional(),
+  height: z.number().optional(),
+  length: z.number().optional(),
+  longitudinal_rebar: z.string().optional(),
+  stirrups: z.string().optional(),
+  bom: z.object({
+    steel_weight: z.number().optional(),
+    concrete_volume: z.number().optional(),
+    rationale: z.string().optional(),
+  }),
 });
 
 const getBuildingComponent = async (
@@ -73,9 +56,6 @@ export function ColumnComponentSidebar({
     buildingComponent?.component_data
   );
 
-  const bom = bomSchema.safeParse(buildingComponent?.component_bom);
-  console.log(bom);
-
   return (
     <div className="bg-white border-l w-[500px] fixed right-0 bottom-0 top-[112px]">
       {isLoading && (
@@ -109,57 +89,44 @@ export function ColumnComponentSidebar({
           </div>
           <div className="overflow-y-scroll h-[calc(100vh-112px)] p-2 custom-scrollbar">
             <div className="space-y-8">
-              {/* basic info */}
-              <div className="flex flex-col gap-2 border-b pb-8">
-                <div className="text-sm">
-                  <div className="font-bold">Justificativa:</div>
-                </div>
-              </div>
-
               {/* bom */}
-              <div className="flex flex-col gap-2 border-b pb-8">
+              <div className="flex flex-col space-y-4">
                 <div className="">
-                  <div className="font-bold mb-4">Especificações</div>
-                  <div className="flex flex-col gap-2">
-                    <div className="text-sm">
-                      <div className="font-bold">Dimensões:</div>
-                      <p className="">
+                  <div className="font-bold mb-4 text-lg">Especificações</div>
+                  <div className="flex flex-col text-sm">
+                    <div className="flex gap-2 items-center">
+                      <div className="">Dimensões:</div>
+                      <p className="font-semibold">
                         {componentData?.width}x{componentData?.length}x
                         {componentData?.height}cm
                       </p>
                     </div>
-                    <div className="text-sm">
-                      <div className="font-bold">Tipo:</div>
-                      <p className="">{componentData?.type}</p>
-                    </div>
-                    <div className="text-sm">
-                      <div className="font-bold">
-                        Diâmetro da armadura longitudinal:
-                      </div>
-                      <p className="">{componentData?.longitudinal_rebar}</p>
-                    </div>
-                    <div className="text-sm">
-                      <div className="font-bold">
-                        Número de estribos e espaçamento:
-                      </div>
-                      <div className="">
-                        {componentData.longitudinal_rebar_stirrups_distribution.map(
-                          (item) => (
-                            <p key={item.interval}>
-                              [{item.interval}] - {item.number}u//{item.spacing}
-                              cm
-                            </p>
-                          )
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-sm">
-                      <div className="font-bold">Arranque:</div>
-                      <p className="">
-                        Altura: {componentData?.starter_rebar_height || 0}cm
+                    <div className="flex gap-2 items-center">
+                      <div className="">Diâmetro da armadura longitudinal:</div>
+                      <p className="font-semibold">
+                        {componentData?.longitudinal_rebar}
                       </p>
-                      <p className="">
-                        Diâmetro: {componentData?.starter_rebar || 0}
+                    </div>
+                  </div>
+                </div>
+                <Separator />
+                <div className="">
+                  <div className="font-bold mb-4 text-lg">Materiais</div>
+                  <div className="flex flex-col gap-2">
+                    <div className="">
+                      <div className="text-muted-foreground text-sm">
+                        Peso do aço:
+                      </div>
+                      <p className="font-bold">
+                        {componentData?.bom?.steel_weight}kg
+                      </p>
+                    </div>
+                    <div className="">
+                      <div className="text-muted-foreground text-sm">
+                        Volume de concreto:
+                      </div>
+                      <p className="font-bold">
+                        {componentData?.bom?.concrete_volume}m³
                       </p>
                     </div>
                   </div>

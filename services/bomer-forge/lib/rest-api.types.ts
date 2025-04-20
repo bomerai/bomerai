@@ -139,6 +139,23 @@ export interface paths {
         patch: operations["v1_draft_building_designs_partial_update"];
         trace?: never;
     };
+    "/api/v1/draft-building-designs/{uuid}/bom/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Get the bill of materials for a draft building design. */
+        get: operations["v1_draft_building_designs_bom_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/draft-building-designs/{uuid}/building-components/": {
         parameters: {
             query?: never;
@@ -317,6 +334,21 @@ export interface components {
             /** Format: uuid */
             project: string;
             readonly building_components: string[];
+        };
+        DraftBuildingDesignBom: {
+            footings: components["schemas"]["DraftBuildingDesignBomItem"][];
+            columns: components["schemas"]["DraftBuildingDesignBomItem"][];
+            beams: components["schemas"]["DraftBuildingDesignBomItem"][];
+            slabs: components["schemas"]["DraftBuildingDesignBomItem"][];
+        };
+        DraftBuildingDesignBomItem: {
+            /** Format: uuid */
+            id: string;
+            /** Format: double */
+            steel_weight: number;
+            /** Format: double */
+            concrete_volume: number;
+            quantity: number;
         };
         DraftBuildingDesignBuildingComponent: {
             /** Format: uuid */
@@ -798,6 +830,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DraftBuildingDesign"];
+                };
+            };
+        };
+    };
+    v1_draft_building_designs_bom_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this draft building design. */
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftBuildingDesignBom"];
                 };
             };
         };

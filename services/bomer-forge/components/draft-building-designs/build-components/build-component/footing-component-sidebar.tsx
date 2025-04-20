@@ -15,16 +15,15 @@ const componentDataSchema = z.object({
   width: z.number().optional(),
   length: z.number().optional(),
   height: z.number().optional(),
-  bottom_reinforcement_x: z.string().optional(),
-  bottom_reinforcement_y: z.string().optional(),
-  top_reinforcement_x: z.string().optional(),
-  top_reinforcement_y: z.string().optional(),
-});
-
-const bomSchema = z.object({
-  concrete_volume_in_cubic_meters: z.number().optional(),
-  steel_weight_in_kilograms: z.number().optional(),
-  rationale: z.string().optional(),
+  bottom_reinforcement_x: z.string().nullable(),
+  bottom_reinforcement_y: z.string().nullable(),
+  top_reinforcement_x: z.string().nullable(),
+  top_reinforcement_y: z.string().nullable(),
+  bom: z.object({
+    steel_weight: z.number().optional(),
+    concrete_volume: z.number().optional(),
+    rationale: z.string().optional(),
+  }),
 });
 
 const getBuildingComponent = async (
@@ -60,8 +59,6 @@ export function FootingComponentSidebar({
     buildingComponent?.component_data
   );
 
-  const bom = bomSchema.parse(buildingComponent?.component_bom);
-
   return (
     <div className="bg-white border-l w-[500px] fixed right-0 bottom-0 top-[112px]">
       {isLoading && (
@@ -95,36 +92,27 @@ export function FootingComponentSidebar({
           </div>
           <div className="overflow-y-scroll h-[calc(100vh-112px)] pb-[112px] p-2 custom-scrollbar">
             <div className="space-y-8">
-              {/* basic info */}
-              <div className="flex flex-col gap-2 border-b pb-8">
-                <div className="text-sm">
-                  <div className="font-bold">Justificativa:</div>
-                  <p className="">{componentData.justification}</p>
-                </div>
-              </div>
-
               {/* bom */}
               <div className="flex flex-col gap-2 border-b pb-8">
                 <div className="">
-                  <div className="font-bold mb-4">Cálculo de Quantidade</div>
+                  <div className="font-bold mb-4 text-lg">Materiais</div>
                   <div className="flex flex-col gap-2">
-                    <div className="text-sm">
-                      <div className="font-bold">Raciocínio:</div>
-                      <p className="">{bom.rationale ?? "--"}</p>
-                    </div>
-
-                    <div className="text-sm">
-                      <div className="font-bold">Volume de concreto:</div>
-                      <p className="">
-                        {bom.concrete_volume_in_cubic_meters?.toFixed(2) ??
-                          "N/A"}
-                        m³
+                    <div className="">
+                      <div className="text-muted-foreground text-sm">
+                        Volume de concreto:
+                      </div>
+                      <p className="font-bold">
+                        {componentData.bom.concrete_volume?.toFixed(2) ?? "N/A"}{" "}
+                        <span className="prose">m³</span>
                       </p>
                     </div>
-                    <div className="text-sm">
-                      <div className="font-bold">Peso do aço:</div>
-                      <p className="">
-                        {bom.steel_weight_in_kilograms?.toFixed(2) ?? "N/A"} kg
+                    <div className="">
+                      <div className="text-muted-foreground text-sm">
+                        Peso do aço:
+                      </div>
+                      <p className="font-bold">
+                        {componentData.bom.steel_weight}{" "}
+                        <span className="prose">kg</span>
                       </p>
                     </div>
                   </div>

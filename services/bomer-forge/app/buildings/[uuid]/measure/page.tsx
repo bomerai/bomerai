@@ -232,7 +232,7 @@ const Step1 = ({
           Faça o upload das imagens dos pormenores das sapatas
         </CardDescription>
       </CardHeader>
-      <CardContent className={cn("hidden", currentStep === 1 && "opacity-100")}>
+      <CardContent className={cn("hidden", currentStep === 1 && "block")}>
         <div className="space-y-6">
           <FileUpload
             onFilesSelected={(files) => setFiles(files)}

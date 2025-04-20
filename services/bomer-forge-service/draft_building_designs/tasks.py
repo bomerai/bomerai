@@ -8,7 +8,7 @@ from draft_building_designs.models import (
     DraftBuildingDesignStatus,
 )
 from building_components.models import BuildingComponent, BuildingComponentType
-from draft_building_designs.services.ai.draft_design_building_components_measure import (
+from draft_building_designs.services.ai.draft_building_design_components_measure import (
     extract_footings_from_image as extract_footings_from_image_service,
     extract_column_from_image as extract_column_from_image_service,
 )
