@@ -67,22 +67,6 @@ def get_extract_footings_from_design_drawing_document_prompt() -> tuple[str, str
 
 class PilarBase(BaseModel):
     codigo: str | None = Field(None, description="O codigo do pilar. Exemplo: P1=P2=P3")
-    pisos: list[str] = Field(
-        ..., description="Os pisos que o pilar atinge. Exemplo: ['Fundacao', 'Piso 1']"
-    )
-    tipo: Literal["0", "1"] = Field(..., description="O tipo de pilar")
-
-
-class DistribuicaoPilarEstribos(BaseModel):
-    intervalo: str = Field(..., description="O intervalo do pilar. Exemplo: '100-400'")
-    numero: int = Field(..., description="Número de estribos")
-    espacamento: float = Field(
-        ..., description="O espaçamento dos estribos em centimentros"
-    )
-
-
-class DistribuicaoPilarArranqueEstribos(BaseModel):
-    numero: int = Field(..., description="Número de estribos")
 
 
 class Pilar(PilarBase):
@@ -94,23 +78,11 @@ class Pilar(PilarBase):
     )
     armadura_longitudinal: str = Field(
         ...,
-        description="O numero e o diametro da armadura longitudinal do pilar. Exemplo: 4Ø12",
+        description="O diametro e quantidade da armadura longitudinal do pilar. Exemplo: 4Ø12",
     )
-    pilar_estribos: list[DistribuicaoPilarEstribos] = Field(
+    estribos: str = Field(
         ...,
-        description="A distribuicao dos estribos da armadura longitudinal do pilar",
-    )
-    arranque: str = Field(
-        ...,
-        description="O diametro do arranque da armadura longitudinal do pilar. Geralmente o mesmo valor que a armadura longitudinal. Exemplo: 4Ø12",
-    )
-    arranque_estribos: list[DistribuicaoPilarArranqueEstribos] = Field(
-        ...,
-        description="A distribuicao dos estribos do arranque da armadura longitudinal do pilar",
-    )
-    estribo_diametro: str = Field(
-        ...,
-        description="O diametro do estribo do pilar",
+        description="O diametro e quantidade de estribos do pilar, também conhecido como armadura transversais. Exemplo: 24Ø8",
     )
 
 
@@ -192,12 +164,27 @@ columns_prompt_text_v2 = """
         Se algum dado não estiver visível na imagem, utilize **conhecimento de engenharia civil** para estimar valores plausíveis. O retorno deve seguir o seguinte JSON schema: {schema}
         """
 
+columns_prompt_text_v3 = """
+        Você é um assistente técnico especializado em engenharia estrutural. Sua tarefa é analisar imagens de detalhamento de pilares (como plantas de formas ou armação) e extrair informações estruturadas em formato JSON para posterior uso em um sistema de cálculo automático de estruturas.
 
-def get_extract_columns_metadata_from_design_drawing_file_prompt() -> tuple[str, str]:
+        **Sua resposta deve ser um JSON válido seguindo o seguinte schema:**
+        {schema}
+
+        Regras e Observações:
+        - A altura deve ser calculada com base na soma dos intervalos de estribos descritos no detalhamento (como “0 a 335 cm” ou “0 a 100 cm”).
+        - Caso haja trechos adicionais como “arranque”, ignore-os.
+        - O campo armadura_longitudinal representa a quantidade e diâmetro das barras longitudinais do pilar.
+        - O campo estribos representa a armadura transversal (também chamada de estribo), incluindo diâmetro e quantidade de estribos.
+        - A quantidade de estribos é a soma dos números de estribos presente ta tabela de intervalos.
+        - Se houver múltiplos blocos de informação (por exemplo, diferentes intervalos ou trechos), consolide os dados em um único objeto.
+        """
+
+
+def get_extract_column_from_design_drawing_file_prompt() -> tuple[str, str]:
     """Returns the prompt for extracting column metadata in Portuguese"""
     return (
-        columns_prompt_text_v2,
-        Pilares.__name__,
+        columns_prompt_text_v3,
+        Pilar.__name__,
     )
 
 

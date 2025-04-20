@@ -34,6 +34,28 @@ class Footings(BaseModel):
     footings: list[Footing]
 
 
+# Base domain model for columns
+class Column(BaseModel):
+    code: str
+    width: float
+    length: float
+    height: float
+    longitudinal_rebar: str
+    stirrups: str
+    type: str = "COLUMN"
+
+
+class ColumnIPE(BaseModel):
+    code: str | None = None
+    description: str | None = None
+    height: float | None = None
+    type: str = "COLUMN_IPE"
+
+
+class Columns(BaseModel):
+    columns: list[Column]
+
+
 class LanguageModelFactory:
     @staticmethod
     def get_language_model(
@@ -91,6 +113,17 @@ class ModelMapper:
             },
             "Sapatas": {
                 "sapatas": "footings",
+            },
+            "Pilar": {
+                "codigo": "code",
+                "largura": "width",
+                "comprimento": "length",
+                "altura": "height",
+                "armadura_longitudinal": "longitudinal_rebar",
+                "estribos": "stirrups",
+            },
+            "Pilares": {
+                "pilares": "columns",
             },
             # Add more mappings for other languages here
         }
@@ -249,3 +282,71 @@ def extract_footings_from_image(
     # Map to domain model
     domain_model = ModelMapper.map_to_domain(language_specific_model, Footings)
     return cast(Footings, domain_model).footings
+
+
+def extract_column_from_image(
+    *,
+    drawing_document_uuid: str,
+    language_code: str = "pt",
+) -> Column:
+    """
+    Extract columns metadata from a drawing document
+
+    Args:
+        drawing_document_uuid: The UUID of the drawing document
+        language_code: The language code to use (default: pt)
+
+    Returns:
+        A list of Column domain models with the extracted metadata
+    """
+    import json
+
+    from langfuse.openai import OpenAI
+
+    prompt_name = "extract_column_from_design_drawing_file"
+    # Get the language-specific model and prompt
+    language_model_class, prompt_text = LanguageModelFactory.get_language_model(
+        language_code, prompt_name
+    )
+
+    # -
+
+    drawing_document = DraftBuildingDesignDrawingDocument.objects.get(
+        uuid=drawing_document_uuid
+    )
+
+    image_base64 = encode_image(drawing_document.file.path)
+
+    client = OpenAI()
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        response_format={"type": "json_object"},
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": f"""
+                        {prompt_text.format(
+                            schema=language_model_class.model_json_schema(),
+                        )}
+                        """,
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/png;base64,{image_base64}",
+                        },
+                    },
+                ],
+            },
+        ],
+        name=f"{prompt_name}_{language_code}",
+    )
+
+    json_data = json.loads(response.choices[0].message.content)
+    language_specific_model = language_model_class(**json_data)
+
+    domain_model = ModelMapper.map_to_domain(language_specific_model, Column)
+    return cast(Column, domain_model)

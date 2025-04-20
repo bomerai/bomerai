@@ -14,9 +14,7 @@ export default function DraftBuildingDesignCard({
   return (
     <Card
       className="h-[300px] justify-between flex flex-col hover:cursor-pointer"
-      onClick={() =>
-        router.push(`/building-designs/${draftBuildingDesign.uuid}`)
-      }
+      onClick={() => router.push(`/buildings/${draftBuildingDesign.uuid}`)}
     >
       <CardHeader>
         <CardTitle className="space-y-2">

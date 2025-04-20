@@ -50,6 +50,7 @@ class DraftBuildingDesignViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED,
         )
 
+    # TODO: remove
     @action(
         detail=True,
         methods=["post"],

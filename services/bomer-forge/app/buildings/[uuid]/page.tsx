@@ -1,11 +1,17 @@
 "use client";
 
-import { ReviewSection } from "@/components/draft-building-designs/review-section";
+import { DraftBuildingDesignBomSection } from "@/components/draft-building-designs/draft-building-design-bom-section";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, ArrowRight } from "lucide-react";
+import {
+  ChevronRight,
+  ArrowRight,
+  CheckCircleIcon,
+  ToyBrick,
+} from "lucide-react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { ColumnsSection } from "@/components/draft-building-designs/columns-section";
+import { DraftBuildingDesignColumns } from "@/components/draft-building-designs/draft-building-design-columns";
+import { DraftBuildingDesignBeams } from "@/components/draft-building-designs/draft-building-design-beams";
 import Asterisc from "@/components/ui/icons/asterisc";
 import { useQuery } from "@tanstack/react-query";
 import { components } from "@/lib/rest-api.types";
@@ -15,15 +21,16 @@ import { FootingComponentSidebar } from "@/components/draft-building-designs/bui
 import { cn } from "@/lib/utils";
 import { ColumnComponentSidebar } from "@/components/draft-building-designs/build-components/build-component/column-component-sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BellIcon } from "@heroicons/react/24/outline";
+import { ArrowTurnUpRightIcon, BellIcon } from "@heroicons/react/24/outline";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
 
 const TABS = {
-  review: "review",
+  bom: "bom",
   foundations: "foundations",
   columns: "columns",
   beams: "beams",
@@ -72,7 +79,7 @@ export default function BuildingDesignPage() {
                   </p>
                   <div className="flex justify-end">
                     <Link
-                      href={`/building-designs/${uuid}/modules/structure-project/bom?step=1`}
+                      href={`/buildings/${uuid}/modules/structure-project/bom?step=1`}
                       className="flex items-center bg-anchor text-white px-4 py-1 text-sm rounded shadow-md transition-all duration-300"
                     >
                       Começar
@@ -90,14 +97,18 @@ export default function BuildingDesignPage() {
 
   const renderTabContent = () => {
     switch (tab) {
-      case TABS.review:
-        return <ReviewSection />;
+      case TABS.bom:
+        return <DraftBuildingDesignBomSection />;
       case TABS.foundations:
         return (
           <DraftBuildingDesignFootings buildingDesignUuid={uuid as string} />
         );
       case TABS.columns:
-        return <ColumnsSection buildingDesignUuid={uuid as string} />;
+        return (
+          <DraftBuildingDesignColumns buildingDesignUuid={uuid as string} />
+        );
+      case TABS.beams:
+        return <DraftBuildingDesignBeams buildingDesignUuid={uuid as string} />;
       default:
         return <HomeSection />;
     }
@@ -124,7 +135,7 @@ export default function BuildingDesignPage() {
           <ChevronRight className="w-4 h-4 text-muted-foreground" />
           <Link
             className="leading-[54px] font-bold"
-            href={`/building-designs/${uuid}/structure-calculation`}
+            href={`/buildings/${uuid}/structure-calculation`}
           >
             {draftBuildingDesign?.name}
           </Link>
@@ -140,60 +151,64 @@ export default function BuildingDesignPage() {
         </div>
       </div>
       <div className="flex items-center justify-between px-8 py-4 border-b h-14 z-10">
-        <nav className="flex items-center space-x-6">
+        <div className="flex items-center gap-4">
           <Link
-            className={`leading-[54px] flex items-center gap-1 ${
-              tab === TABS.review ? "font-bold" : ""
+            className={`leading-[54px] flex items-center font-semibold gap-1 ${
+              tab === TABS.bom ? "font-bold" : ""
             }`}
-            href={`/building-designs/${uuid}?tab=${TABS.review}`}
+            href={`/buildings/${uuid}?tab=${TABS.bom}`}
           >
-            Revisão
+            Caderno de encargos
+            <ArrowTurnUpRightIcon className="w-4 h-4" />
           </Link>
-          <Link
-            className={`leading-[54px] flex items-center gap-1 ${
-              tab === TABS.foundations ? "font-bold" : ""
-            }`}
-            href={`/building-designs/${uuid}?tab=${TABS.foundations}`}
-          >
-            Fundação
-          </Link>
-          <Link
-            className={`leading-[54px] flex items-center gap-1 ${
-              tab === TABS.columns ? "font-bold" : ""
-            }`}
-            href={`/building-designs/${uuid}?tab=${TABS.columns}`}
-          >
-            Pilares
-          </Link>
-          <Link
-            className={`leading-[54px] flex items-center gap-1 ${
-              tab === TABS.beams ? "font-bold" : ""
-            }`}
-            href={`/building-designs/${uuid}?tab=${TABS.beams}`}
-          >
-            Vigas
-          </Link>
-          <Link
-            className={`leading-[54px] flex items-center gap-1 ${
-              tab === "slabs" ? "font-bold" : ""
-            }`}
-            href={`/building-designs/${uuid}?tab=slabs`}
-          >
-            Lajes
-          </Link>
-        </nav>
+          |
+          <span className="text-sm text-black/70 font-semibold">
+            Componentes:
+          </span>
+          <nav className="flex items-center space-x-6">
+            <Link
+              className={`leading-[54px] flex items-center gap-1 ${
+                tab === TABS.foundations ? "font-bold" : ""
+              }`}
+              href={`/buildings/${uuid}?tab=${TABS.foundations}`}
+            >
+              <ToyBrick className="w-4 h-4" />
+              Fundação
+            </Link>
+            <Link
+              className={`leading-[54px] flex items-center gap-1 ${
+                tab === TABS.columns ? "font-bold" : ""
+              }`}
+              href={`/buildings/${uuid}?tab=${TABS.columns}`}
+            >
+              <ToyBrick className="w-4 h-4" />
+              Pilares
+            </Link>
+            <Link
+              className={`leading-[54px] flex items-center gap-1 ${
+                tab === TABS.beams ? "font-bold" : ""
+              }`}
+              href={`/buildings/${uuid}?tab=${TABS.beams}`}
+            >
+              <ToyBrick className="w-4 h-4" />
+              Vigas
+            </Link>
+            <Link
+              className={`leading-[54px] flex items-center gap-1 ${
+                tab === "slabs" ? "font-bold" : ""
+              }`}
+              href={`/buildings/${uuid}?tab=slabs`}
+            >
+              <ToyBrick className="w-4 h-4" />
+              Lajes
+            </Link>
+          </nav>
+        </div>
         <div className="flex items-center gap-4">
           <Button variant="outline">
             <Asterisc className="w-4 h-4 text-anchor" />
             Gerar caderno de encargos
           </Button>
-
-          {/* <Link
-            className="leading-[54px] font-bold flex items-center gap-2"
-            href={`/building-designs/${uuid}/design-drawings`}
-          >
-            Especificações <ArrowUpRight className="w-4 h-4" />
-          </Link> */}
         </div>
       </div>
 
@@ -202,7 +217,7 @@ export default function BuildingDesignPage() {
           <div
             className={cn(
               "tab-content flex flex-1 mr-[500px] z-10",
-              (tab === TABS.review || tab === null) && "mr-[0px]"
+              (tab === TABS.bom || tab === null) && "mr-[0px]"
             )}
           >
             {renderTabContent()}
@@ -225,8 +240,12 @@ export default function BuildingDesignPage() {
 
 const NotificationItem = () => {
   return (
-    <div className="flex items-center gap-2 hover:bg-gray-100 p-2 px-4">
-      <p className="text-sm">Notificação 1</p>
+    <div className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100">
+      <CheckCircleIcon className="w-4 h-4 text-green-500" />
+      <p className="font-medium hover:underline">
+        Cálculo finalizado com sucesso.{" "}
+      </p>
+      <span className="text-sm text-muted-foreground">2 horas atrás</span>
     </div>
   );
 };
@@ -238,9 +257,11 @@ const NotificationDropdown = () => {
         <BellIcon className="w-5 h-5 text-anchor" />
         <div className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></div>
       </PopoverTrigger>
-      <PopoverContent className="px-0">
+      <PopoverContent className="w-[500px] p-0">
         <div className="flex flex-col">
-          <div className="flex flex-col">
+          <h2 className="text-xl font-bold p-4">Notificações</h2>
+          <Separator />
+          <div className="flex flex-col px-2 py-4">
             <NotificationItem />
             <NotificationItem />
             <NotificationItem />

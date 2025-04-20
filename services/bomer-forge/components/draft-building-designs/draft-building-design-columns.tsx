@@ -4,7 +4,7 @@ import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Loader2, UploadIcon } from "lucide-react";
+import { Boxes, Loader2, UploadIcon } from "lucide-react";
 import { DialogClose, DialogFooter } from "@/components/ui/dialog";
 import {
   DialogContent,
@@ -21,7 +21,7 @@ import { fetcher } from "@/lib/api-fetcher";
 import { components } from "@/lib/rest-api.types";
 import { ColumnComponentCard } from "./build-components/build-component/column-component-card";
 
-export function ColumnsSection({
+export function DraftBuildingDesignColumns({
   buildingDesignUuid,
 }: {
   buildingDesignUuid: string;
@@ -41,7 +41,7 @@ export function ColumnsSection({
     queryKey: ["columns"],
     queryFn: () =>
       fetcher<components["schemas"]["DraftBuildingDesignBuildingComponent"][]>(
-        `${process.env.NEXT_PUBLIC_FORGE_SERVICE_API_URL}/api/v1/draft-building-designs/${buildingDesignUuid}/column-components/`
+        `${process.env.NEXT_PUBLIC_FORGE_SERVICE_API_URL}/api/v1/draft-building-designs/${buildingDesignUuid}/building-components?type=COLUMN`
       ),
   });
 
@@ -69,6 +69,11 @@ export function ColumnsSection({
                 buildingDesignUuid={buildingDesignUuid}
               />
             ))
+          )}
+          {columns?.length === 0 && (
+            <div className="flex items-center justify-center border p-4 text-muted-foreground">
+              <Boxes className="w-4 h-4 mr-1" /> Nenhum pilar adicionado ainda.
+            </div>
           )}
         </div>
       </div>

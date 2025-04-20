@@ -68,6 +68,23 @@ export interface paths {
         patch: operations["v1_building_components_partial_update"];
         trace?: never;
     };
+    "/api/v1/building-components/bulk-create/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Create a new building component. */
+        post: operations["v1_building_components_bulk_create_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/celery-task-result/{task_id}/": {
         parameters: {
             query?: never;
@@ -122,6 +139,24 @@ export interface paths {
         patch: operations["v1_draft_building_designs_partial_update"];
         trace?: never;
     };
+    "/api/v1/draft-building-designs/{uuid}/building-components/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Get all building components for a draft building design.
+         *     Filter by component type using the 'type' query parameter. */
+        get: operations["v1_draft_building_designs_building_components_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/draft-building-designs/{uuid}/calculation-modules/": {
         parameters: {
             query?: never;
@@ -148,23 +183,6 @@ export interface paths {
         };
         /** @description Get all column components for a draft building design. */
         get: operations["v1_draft_building_designs_column_components_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/draft-building-designs/{uuid}/foundation-components/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description Get all foundation components for a draft building design. */
-        get: operations["v1_draft_building_designs_foundation_components_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -276,18 +294,16 @@ export interface components {
             description?: string | null;
             /** @description The data for the component */
             component_data?: unknown;
-            /** @description The bill of materials for the component */
-            component_bom?: unknown;
             type: components["schemas"]["BuildingComponentTypeEnum"];
-            floor?: string | null;
         };
         /**
          * @description * `FOOTING` - Footing
          *     * `COLUMN` - Column
          *     * `BEAM` - Beam
+         *     * `SLAB` - Slab
          * @enum {string}
          */
-        BuildingComponentTypeEnum: "FOOTING" | "COLUMN" | "BEAM";
+        BuildingComponentTypeEnum: "FOOTING" | "COLUMN" | "BEAM" | "SLAB";
         DraftBuildingDesign: {
             /** Format: uuid */
             readonly uuid: string;
@@ -310,9 +326,6 @@ export interface components {
             readonly created_at: string;
             /** Format: date-time */
             readonly updated_at: string;
-            justification?: string;
-            task_id?: string | null;
-            bom?: unknown;
             /** Format: uuid */
             draft_building_design: string;
         };
@@ -361,10 +374,7 @@ export interface components {
             description?: string | null;
             /** @description The data for the component */
             component_data?: unknown;
-            /** @description The bill of materials for the component */
-            component_bom?: unknown;
             type?: components["schemas"]["BuildingComponentTypeEnum"];
-            floor?: string | null;
         };
         PatchedDraftBuildingDesign: {
             /** Format: uuid */
@@ -604,6 +614,31 @@ export interface operations {
             };
         };
     };
+    v1_building_components_bulk_create_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BuildingComponent"];
+                "application/x-www-form-urlencoded": components["schemas"]["BuildingComponent"];
+                "multipart/form-data": components["schemas"]["BuildingComponent"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuildingComponent"];
+                };
+            };
+        };
+    };
     v1_celery_task_result_retrieve: {
         parameters: {
             query?: never;
@@ -767,6 +802,28 @@ export interface operations {
             };
         };
     };
+    v1_draft_building_designs_building_components_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this draft building design. */
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftBuildingDesignBuildingComponent"];
+                };
+            };
+        };
+    };
     v1_draft_building_designs_calculation_modules_retrieve: {
         parameters: {
             query?: never;
@@ -790,28 +847,6 @@ export interface operations {
         };
     };
     v1_draft_building_designs_column_components_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description A UUID string identifying this draft building design. */
-                uuid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DraftBuildingDesignBuildingComponent"];
-                };
-            };
-        };
-    };
-    v1_draft_building_designs_foundation_components_retrieve: {
         parameters: {
             query?: never;
             header?: never;

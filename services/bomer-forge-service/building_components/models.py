@@ -15,6 +15,7 @@ class BuildingComponentType(models.TextChoices):
     FOOTING = "FOOTING"
     COLUMN = "COLUMN"
     BEAM = "BEAM"
+    SLAB = "SLAB"
 
 
 class BuildingComponent(BaseModel):
@@ -30,7 +31,6 @@ class BuildingComponent(BaseModel):
         blank=True,
     )
     type = models.CharField(max_length=255, choices=BuildingComponentType.choices)
-    floor = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         """Return a string representation of the building component."""

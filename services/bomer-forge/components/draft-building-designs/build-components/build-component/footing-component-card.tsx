@@ -10,19 +10,16 @@ import { useRouter } from "next/navigation";
 import { components } from "@/lib/rest-api.types";
 import z from "zod";
 
-// {"type": "Sapata Isolada", "width": 105.0, "height": 40.0, "length": 105.0, "references": "P27=P31", "justification": "Característica das sapatas isoladas com dimensões e armaduras dadas para P27 e P31.", "top_reinforcement_x": "4Ø16a/28", "top_reinforcement_y": "4Ø16a/28", "bottom_reinforcement_x": "4Ø16a/28", "bottom_reinforcement_y": "4Ø16a/28"}
-
 const componentDataSchema = z.object({
   type: z.string(),
   references: z.string().optional(),
-  justification: z.string().optional(),
   width: z.number().optional(),
   length: z.number().optional(),
   height: z.number().optional(),
-  bottom_reinforcement_x: z.string().optional(),
-  bottom_reinforcement_y: z.string().optional(),
-  top_reinforcement_x: z.string().optional(),
-  top_reinforcement_y: z.string().optional(),
+  bottom_reinforcement_x: z.string().nullable(),
+  bottom_reinforcement_y: z.string().nullable(),
+  top_reinforcement_x: z.string().nullable(),
+  top_reinforcement_y: z.string().nullable(),
 });
 
 const getCeleryTaskResult = async (
@@ -99,14 +96,12 @@ export function FootingComponentCard({
   const handleClick = () => {
     const searchParams = new URLSearchParams(window.location.search);
     searchParams.set("footingComponentUuid", footing.building_component.uuid);
-    router.push(
-      `/building-designs/${buildingDesignUuid}?${searchParams.toString()}`
-    );
+    router.push(`/buildings/${buildingDesignUuid}?${searchParams.toString()}`);
   };
 
   return (
     <div
-      className="p-6 bg-white border rounded flex items-start justify-between gap-12 hover:cursor-pointer hover:border-anchor"
+      className="p-6 bg-white border rounded flex items-start justify-between gap-12 hover:cursor-pointer hover:ring-2 hover:ring-anchor"
       onClick={handleClick}
     >
       <div className="flex flex-col space-y-8 flex-1">
@@ -114,9 +109,6 @@ export function FootingComponentCard({
           <h4 className="font-semibold">
             {componentData.type} {componentData.references}
           </h4>
-          <p className="text-sm text-muted-foreground">
-            {footing.justification}
-          </p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -127,41 +119,58 @@ export function FootingComponentCard({
         </div>
 
         <div className="flex flex-col space-y-4">
-          <div className="grid grid-cols-4 gap-4 text-xs">
+          <div className="grid grid-cols-4 gap-4">
             <div className="flex flex-col">
-              <div className="font-medium">Largura (cm)</div>
-              <div className="">{componentData.width}</div>
+              <div className="font-medium text-sm text-muted-foreground">
+                Dimensões (cm)
+              </div>
+              <div className="font-semibold">
+                {componentData.width}x{componentData.length}x
+                {componentData.height}
+              </div>
             </div>
             <div className="flex flex-col border-l pl-4">
-              <div className="font-medium">Comprimento (cm)</div>
-              <div className="">{componentData.length}</div>
-            </div>
-            <div className="flex flex-col border-l pl-4">
-              <div className="font-medium">Altura (cm)</div>
-              <div className="">{componentData.height}</div>
-            </div>
-            <div className="flex flex-col border-l pl-4">
-              <div className="font-medium">Referências</div>
-              <div className="italic">{componentData.references}</div>
+              <div className="font-medium text-sm text-muted-foreground">
+                Referências
+              </div>
+              <div className="italic text-sm font-semibold">
+                {componentData.references}
+              </div>
             </div>
           </div>
           <hr className="w-full border-t border/60" />
-          <div className="grid grid-cols-4 gap-4 text-xs">
+          <div className="grid grid-cols-4 gap-4">
             <div className="flex flex-col">
-              <div className="font-medium">Armadura Inf. X</div>
-              <div className="">{componentData.bottom_reinforcement_x}</div>
+              <div className="font-medium text-sm text-muted-foreground">
+                Armadura Inf. X
+              </div>
+              <div className="font-semibold">
+                {componentData.bottom_reinforcement_x}
+              </div>
             </div>
             <div className="flex flex-col border-l pl-4">
-              <div className="font-medium">Armadura Inf. Y</div>
-              <div className="">{componentData.bottom_reinforcement_y}</div>
+              <div className="font-medium text-sm text-muted-foreground">
+                Armadura Inf. Y
+              </div>
+              <div className="font-semibold">
+                {componentData.bottom_reinforcement_y}
+              </div>
             </div>
             <div className="flex flex-col border-l pl-4">
-              <div className="font-medium">Armadura Sup. X</div>
-              <div className="">{componentData.top_reinforcement_x}</div>
+              <div className="font-medium text-sm text-muted-foreground">
+                Armadura Sup. X
+              </div>
+              <div className="font-semibold">
+                {componentData.top_reinforcement_x}
+              </div>
             </div>
             <div className="flex flex-col border-l pl-4">
-              <div className="font-medium">Armadura Sup. Y</div>
-              <div className="">{componentData.top_reinforcement_y}</div>
+              <div className="font-medium text-sm text-muted-foreground">
+                Armadura Sup. Y
+              </div>
+              <div className="font-semibold">
+                {componentData.top_reinforcement_y}
+              </div>
             </div>
           </div>
         </div>

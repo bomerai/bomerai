@@ -1,8 +1,26 @@
-import { PlusIcon } from "lucide-react";
+import { components } from "@/lib/rest-api.types";
+import { InfoIcon } from "lucide-react";
+import z from "zod";
 
-import { Button } from "@/components/ui/button";
+const beamComponentSchema = z.object({
+  width: z.number(),
+  length: z.number(),
+  height: z.number(),
+  longitudinal_reinforcement_diameter: z.number(),
+  longitudinal_reinforcement_quantity: z.number(),
+  stirrups_diameter: z.number(),
+  stirrups_quantity: z.number(),
+  stirrups_spacing: z.number(),
+});
 
-export function BeamComponentCard() {
+export function BeamComponentCard({
+  beam,
+}: {
+  beam: components["schemas"]["DraftBuildingDesignBuildingComponent"];
+}) {
+  const componentData = beamComponentSchema.parse(
+    beam.building_component.component_data
+  );
   return (
     <div className="p-4 border rounded space-y-2">
       <div className="flex flex-col">
@@ -11,17 +29,15 @@ export function BeamComponentCard() {
       </div>
       <div className="flex items-center gap-4">
         <div className="border-r border-r-border pr-4">
-          Largura: <span className="font-bold">23cm</span>
-        </div>
-        <div className="border-r border-r-border pr-4">
-          Altura: <span className="font-bold">23cm</span>
-        </div>
-        <div className="flex items-center gap-2">
-          Comprimento:{" "}
-          <Button variant="link">
-            <PlusIcon className="w-4 h-4" />
-            Adicionar
-          </Button>
+          <div className="flex items-center gap-2">
+            <h4 className="font-medium text-sm text-muted-foreground">
+              Dimensões (cm)
+            </h4>
+            <InfoIcon className="w-4 h-4 text-muted-foreground" />
+          </div>
+          <div className="font-semibold">
+            {componentData.width}x{componentData.height}x{componentData.length}
+          </div>
         </div>
       </div>
     </div>
